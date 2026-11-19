@@ -100,10 +100,11 @@ export function kitHTML(k, o = {}) {
   <div class="kit-grid">
     <section><h4>${ic('spark', 16)} Logo & makna bentuk</h4><div class="kit-logo-row">${lockupSVG(k, 300)}</div><p class="note">${SHAPE_MEANING[k.shape]}</p></section>
     <section><h4>${ic('layers', 16)} Palet "${k.pal.n}"</h4><div class="swatches">${swatch(c0, 'Utama')}${swatch(c1, 'Pendukung')}${swatch(c2, 'Aksen')}${swatch(c3, 'Latar')}${swatch(c4, 'Teks')}</div><p class="note">Klik warna untuk menyalin kode hex.</p></section>
-    <section><h4>${ic('doc', 16)} Tipografi "${k.type.n}"</h4><div class="type-spec"><div style="font-family:'${k.type.h}',serif;font-size:30px;color:${c0}">Aa ${esc(k.name)}</div><span class="note">Judul — ${k.type.h}</span><div style="font-family:'${k.type.b}',sans-serif;font-size:15px">Isi teks yang mudah dibaca untuk kemasan dan konten.</div><span class="note">Isi — ${k.type.b} · keduanya berlisensi SIL Open Font License</span></div></section>
+    ${o.compact ? '' : `<section><h4>${ic('doc', 16)} Tipografi "${k.type.n}"</h4><div class="type-spec"><div style="font-family:'${k.type.h}',serif;font-size:30px;color:${c0}">Aa ${esc(k.name)}</div><span class="note">Judul — ${k.type.h}</span><div style="font-family:'${k.type.b}',sans-serif;font-size:15px">Isi teks yang mudah dibaca untuk kemasan dan konten.</div><span class="note">Isi — ${k.type.b} · keduanya berlisensi SIL Open Font License</span></div></section>
     <section><h4>${ic('user', 16)} Gaya bahasa</h4><ul class="ticks dark">${k.vals.slice(0, 3).map(v => `<li>${ic('check', 15)}<span><b>${v}:</b> ${VOICE[v]}</span></li>`).join('')}</ul><div class="chips" style="margin-top:10px">${tl.map(t => `<span class="pill">“${esc(t)}”</span>`).join('')}</div></section>
     <section class="wide"><h4>${ic('book', 16)} Brand story "Makna"</h4><div class="story-cols">${story(k).map(([h, t]) => `<div><span class="lbl" style="color:${c1}">${h}</span><p>${t}</p></div>`).join('')}</div></section>
+    `}
     <section><h4>${ic('tag', 16)} Mock-up kemasan</h4><div class="mock-wrap" style="background:linear-gradient(160deg, ${c3}, #fff)">${labelSVG(k)}</div></section>
     <section><h4>${ic('play', 16)} Template media sosial</h4><div class="posts">${posts.join('')}</div><p class="note">Di Maknai Kit, template ini tersedia sebagai berkas yang bisa disunting.</p></section>
-  </div></div>`;
+  </div>${o.compact ? `<div class="kit-more"><button class="btn btn-line" data-act="kFull">${ic('book', 16)} Lihat kit lengkap: tipografi, gaya bahasa, brand story</button></div>` : ''}</div>`;
 }

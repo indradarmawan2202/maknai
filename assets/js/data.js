@@ -1,9 +1,9 @@
 /* Maknai — data bisnis (bersumber dari proposal NBPC 2026 Tim INVICTA) dan data contoh prototipe. */
 
 export const PKG = [
-  { id: 'starter', name: 'Starter', price: 350000, days: 3, hpp: 75000, hours: 8, note: 'Pintu masuk untuk usaha yang baru mulai menata identitas.', feat: ['Logo utama + 1 varian', 'Palet warna & tipografi', 'Panduan merek 1 halaman', '3 mock-up', 'Syariah Check ringkas', '2 kali revisi'] },
-  { id: 'brand', name: 'Brand', price: 900000, days: 7, hpp: 280000, hours: 18, hot: true, note: 'Identitas lengkap sampai kemasan dan konten.', feat: ['Semua isi Starter', 'Desain kemasan 1 SKU (label/stiker/box)', '12 template media sosial yang bisa disunting', 'Brand story "Makna"', 'Maknai Kit'] },
-  { id: 'premium', name: 'Premium', price: 2000000, days: 10, hpp: 800000, hours: 40, note: 'Identitas penuh plus foto, video, dan konten sebulan.', feat: ['Semua isi Brand', '15 foto produk + 2 video pendek', 'Konten 1 bulan (12 desain + caption)', 'Konsultasi strategi 2 jam'] }
+  { id: 'starter', name: 'Starter', short: ['Logo + 1 varian', 'Palet warna & tipografi', 'Panduan merek 1 halaman'], price: 350000, days: 3, hpp: 75000, hours: 8, note: 'Pintu masuk untuk usaha yang baru mulai menata identitas.', feat: ['Logo utama + 1 varian', 'Palet warna & tipografi', 'Panduan merek 1 halaman', '3 mock-up', 'Syariah Check ringkas', '2 kali revisi'] },
+  { id: 'brand', name: 'Brand', short: ['Semua isi Starter', 'Desain kemasan 1 SKU', '12 template sosmed + Maknai Kit'], price: 900000, days: 7, hpp: 280000, hours: 18, hot: true, note: 'Identitas lengkap sampai kemasan dan konten.', feat: ['Semua isi Starter', 'Desain kemasan 1 SKU (label/stiker/box)', '12 template media sosial yang bisa disunting', 'Brand story "Makna"', 'Maknai Kit'] },
+  { id: 'premium', name: 'Premium', short: ['Semua isi Brand', '15 foto produk + 2 video', 'Konten 1 bulan + konsultasi'], price: 2000000, days: 10, hpp: 800000, hours: 40, note: 'Identitas penuh plus foto, video, dan konten sebulan.', feat: ['Semua isi Brand', '15 foto produk + 2 video pendek', 'Konten 1 bulan (12 desain + caption)', 'Konsultasi strategi 2 jam'] }
 ];
 export const EXTRA = [
   { id: 'konten', name: 'Langganan Konten', price: 750000, unit: '/bulan', hpp: 300000, hours: 14, feat: ['12 desain feed/story', '4 caption + penjadwalan', '2 video pendek', 'Laporan bulanan sederhana'] },

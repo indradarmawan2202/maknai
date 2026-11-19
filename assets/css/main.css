@@ -919,3 +919,13 @@ footer.foot { margin-top: 80px; border-top: 1px solid var(--line); padding: 48px
   .chat-panel { height: min(560px, calc(100vh - 110px)); }
 }
 @media (max-width: 640px) { .posmap text { font-size: 22px; } .posmap text.ax { font-size: 18px; } .posmap circle { r: 14; } }
+.extras-line { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; margin-top: 16px; border: 1px solid var(--line); border-radius: var(--r-lg); background: var(--surface); overflow: hidden; }
+.extras-line > div { padding: 16px 20px; display: flex; flex-direction: column; gap: 4px; border-right: 1px solid var(--line); }
+.extras-line > div:last-child { border-right: 0; }
+.extras-line b { font-size: 14px; }
+.extras-line .mono { font-weight: 700; font-size: 17px; color: var(--emerald-2); }
+.extras-line small { font-family: var(--font); font-weight: 500; font-size: 12px; color: var(--ink-3); }
+@media (max-width: 760px) { .extras-line { grid-template-columns: 1fr 1fr; } .extras-line > div:nth-child(2) { border-right: 0; } .extras-line > div:nth-child(-n+2) { border-bottom: 1px solid var(--line); } }
+.s7 { min-height: 0; gap: 8px; }
+.kit-more { border-top: 1px solid var(--line); padding: 16px 26px; display: flex; justify-content: center; }
+@media (max-width: 640px) { .kit-more { padding: 14px 18px; } .kit-more .btn { width: 100%; white-space: normal; } }
