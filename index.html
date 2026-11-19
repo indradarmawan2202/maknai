@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>Maknai — Beri makna pada setiap brand</title>
+  <meta name="description" content="Maknai: jasa branding berbasis AI dengan kurasi syariah untuk pesantren dan UMKM halal. Logo, kemasan, konten, dan brand story mulai Rp350.000.">
+  <meta name="theme-color" content="#12503A">
+  <meta property="og:title" content="Maknai — Beri makna pada setiap brand">
+  <meta property="og:description" content="Studio branding AI dengan Maknai Syariah Check untuk pesantren dan UMKM halal.">
+  <meta property="og:type" content="website">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&family=Amiri:wght@400;700&family=DM+Serif+Display&family=Bricolage+Grotesque:opsz,wght@12..96,600..800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/main.css">
+  <script>try{var t=localStorage.getItem('maknai.theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.dataset.theme=t}catch(e){}</script>
+</head>
+<body>
+  <a class="skip" href="#main">Lewati ke konten</a>
+  <div id="landing"><noscript><div style="padding:40px;font-family:sans-serif"><h1>Maknai</h1><p>Beri makna pada setiap brand. Aktifkan JavaScript untuk menjelajahi prototipe interaktif.</p></div></noscript></div>
+  <div id="login" hidden></div>
+  <div id="order" hidden></div>
+  <div id="appscr" hidden></div>
+  <div id="chatWidget"></div>
+
+  <div class="ovl" id="ovl" hidden data-act="closeModal" role="dialog" aria-modal="true"><div class="modal" id="modal"></div></div>
+  <div class="cmdk" id="cmdk" hidden data-act="cmdClose" role="dialog" aria-modal="true" aria-label="Cari menu dan aksi"><div class="box"><input id="cmdIn" type="search" placeholder="Ketik untuk mencari menu atau aksi…" data-in="cmd" autocomplete="off"><ul id="cmdList" role="listbox"></ul></div></div>
+  <div class="toasts" id="toasts" aria-live="polite"></div>
+  <div id="printArea"></div>
+
+  <script type="module" src="assets/js/app.js"></script>
+</body>
+</html>
