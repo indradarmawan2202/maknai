@@ -94,7 +94,7 @@ function route() {
   if (h === 'demo-tim') return demo('tim');
   if ((m = h.match(/^(portal|tim)-([a-z]+)$/))) {
     const role = m[1] === 'tim' ? 'tim' : 'klien';
-    if (!S.session || S.session.role !== role) { if (role === 'tim') return demo('tim'); A.start(); return toast('Masuk dulu, atau coba portal demo', true); }
+    if (!S.session || S.session.role !== role) { if (role !== 'tim') { A.start(); return toast('Masuk dulu, atau coba portal demo', true); } demo('tim'); }
     S.role = role; if (flat(role).some(t => t[0] === m[2])) S.tab[role] = m[2];
     if (S.screen !== 'app') { go('app'); shell(); }
     return render();

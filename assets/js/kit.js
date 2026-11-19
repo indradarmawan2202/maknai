@@ -53,6 +53,7 @@ export function labelSVG(k, o = {}) {
   else if (kind === 'box') body = `<path d="M40 70l80-34 80 34v190l-80 34-80-34z" fill="${c0}" opacity=".18"/><rect x="40" y="70" width="160" height="210" rx="4" fill="${c3}" stroke="${c0}" stroke-width="2"/><path d="M40 70l80-34 80 34" fill="${c1}" opacity=".6"/>`;
   else body = `<path d="M50 30h140l-6 20c10 10 14 24 14 40v176c0 10-8 18-18 18H60c-10 0-18-8-18-18V90c0-16 4-30 14-40z" fill="${c3}" stroke="${c0}" stroke-width="2"/><rect x="50" y="30" width="140" height="10" fill="${c0}"/><path d="M60 50h120" stroke="${c0}" stroke-dasharray="4 3"/>`;
   const big = kind === 'botol' ? { y: 150, s: .42, tx: 120, ty: 196, fs: 15, cy: 212, w: 84 } : { y: 100, s: .55, tx: 120, ty: 182, fs: 22, cy: 202, w: 150 };
+  big.fs = Math.min(big.fs, big.w / (.62 * Math.max(1, String(k.name).length)));
   return `<svg viewBox="0 0 240 300" class="mock" role="img" aria-label="Mock-up kemasan ${esc(k.name)}">${body}${ill}
     <g transform="translate(${120 - 60 * big.s} ${big.y - 4}) scale(${big.s})">${logoSVG(k, k.shape, 120).replace(/^<svg[^>]*>|<\/svg>$/g, '')}</g>
     <text x="${big.tx}" y="${big.ty}" text-anchor="middle" font-family="${F}, serif" font-size="${big.fs}" font-weight="700" fill="${c0}">${esc(k.name)}</text>

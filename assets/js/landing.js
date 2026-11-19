@@ -140,7 +140,7 @@ export function landingHTML() {
 /* ---------- peta posisi ---------- */
 function posMap() {
   const W = 520, H = 360, P = 44, X = v => P + (W - 2 * P) * v / 100, Y = v => H - P - (H - 2 * P) * v / 100;
-  return `<svg viewBox="0 0 ${W} ${H}" class="chart" role="img" aria-label="Peta posisi Maknai terhadap pesaing"><rect x="${P}" y="${P}" width="${W - 2 * P}" height="${H - 2 * P}" fill="var(--surface-2)" rx="12"/><line x1="${W / 2}" y1="${P}" x2="${W / 2}" y2="${H - P}" class="gl"/><line x1="${P}" y1="${H / 2}" x2="${W - P}" y2="${H / 2}" class="gl"/>
+  return `<svg viewBox="0 0 ${W} ${H}" class="chart posmap" role="img" aria-label="Peta posisi Maknai terhadap pesaing"><rect x="${P}" y="${P}" width="${W - 2 * P}" height="${H - 2 * P}" fill="var(--surface-2)" rx="12"/><line x1="${W / 2}" y1="${P}" x2="${W / 2}" y2="${H - P}" class="gl"/><line x1="${P}" y1="${H / 2}" x2="${W - P}" y2="${H / 2}" class="gl"/>
   <text x="${W / 2}" y="${H - 12}" text-anchor="middle" class="ax">Harga →</text><text x="14" y="${H / 2}" class="ax" transform="rotate(-90 14 ${H / 2})" text-anchor="middle">Nilai syariah & makna merek →</text>
   ${COMPETITORS.map(c => `<g><circle cx="${X(c.x)}" cy="${Y(c.y)}" r="${c.me ? 16 : 10}" fill="${c.me ? 'var(--emerald)' : 'var(--ink-3)'}" opacity="${c.me ? 1 : .55}"/>${c.me ? `<text x="${X(c.x)}" y="${Y(c.y) + 5}" text-anchor="middle" font-family="Fraunces" font-weight="700" font-size="14" fill="var(--saffron)">M</text>` : ''}<text x="${c.x > 70 ? X(c.x) - 14 : X(c.x) + (c.me ? 22 : 14)}" y="${Y(c.y) + 4}" text-anchor="${c.x > 70 ? 'end' : 'start'}" font-size="12.5" font-weight="${c.me ? 700 : 500}" fill="var(--ink)">${c.n}</text></g>`).join('')}</svg>`;
 }
