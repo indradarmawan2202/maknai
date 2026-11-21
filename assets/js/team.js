@@ -1,7 +1,10 @@
 /* Ruang Tim Maknai (demo juri): pipeline produksi, kapasitas, proyeksi keuangan + uji skenario, pasar. Angka dari proposal. */
-import { S, A, I, V, $, esc, rp, rpk, num, kfmt, dec, slot, ic, seg, tile, toast, hooks, hbar, cssVar, downloadCSV } from './core.js';
+import { S, A, I, C, V, $, esc, rp, rpk, num, kfmt, dec, slot, ic, seg, tile, toast, hooks, hbar, cssVar, downloadCSV } from './core.js';
 import { PKG, EXTRA, STEPS, PIPE, SALES, FIN, KPI, MARKET, CAPACITY, SWOT, COMPETITORS } from './data.js';
 import { posMap } from './landing.js';
+import { teamOrders, mode } from './store.js';
+import { isLive, act, liveRunCheck } from './livesync.js';
+import { reportHTML, summaryHTML, summary, runCheck, decide, SRC } from './check.js';
 
 const render = () => hooks.render();
 const HOURS = [8, 18, 40, 14, 10, .2];
@@ -16,10 +19,35 @@ const pname = id => (PKG.find(p => p.id === id) || {}).name;
 
 /* ---------- Pipeline ---------- */
 V.tim.pipeline = () => {
-  const cols = STEPS.map((s, i) => ({ s, i, items: PIPE.filter(p => p.s === i) }));
-  return `<div class="grid g4 mb">${tile('Proyek aktif', PIPE.length, 'Semua paket', null, 'kanban')}${tile('Di gerbang syariah', PIPE.filter(p => p.s === 4).length, 'Langkah 5', null, 'shield', 'sf')}${tile('Menunggu klien', PIPE.filter(p => p.s === 5).length, 'Presentasi & revisi', null, 'user', 'cl')}${tile('Nilai pipeline', rpk(PIPE.reduce((s, p) => s + PKG.find(x => x.id === p.p).price, 0)), 'Total jasa', null, 'wallet')}</div>
-  <div class="kanban k7">${cols.map(c => `<div class="kcol ${c.s.gold ? 'gold' : ''}"><h3><span>${c.i + 1}. ${c.s.t}</span><span>${c.items.length}</span></h3>${c.items.map(p => `<div class="kcard"><b>${esc(p.c)}</b><div class="chips"><span class="pill ${p.p === 'premium' ? 'cl' : p.p === 'brand' ? 'em' : 'sf'}">${pname(p.p)}</span><span class="note">${esc(p.by)}</span></div>${c.i < 6 ? `<button class="btn btn-line btn-sm" data-act="pipeNext" data-c="${esc(p.c)}">${c.i === 4 ? 'Lolos Syariah Check' : 'Maju'} ${ic('arrow', 13)}</button>` : '<span class="pill ok">Siap serah terima</span>'}</div>`).join('') || '<span class="note" style="padding:6px">Kosong</span>'}</div>`).join('')}</div>`;
+  const P = teamOrders(), cols = STEPS.map((s, i) => ({ s, i, items: P.filter(p => p.s === i) }));
+  return `<div class="grid g4 mb">${tile('Proyek aktif', P.length, 'Semua paket', null, 'kanban')}${tile('Di gerbang syariah', P.filter(p => p.s === 4).length, 'Langkah 5', null, 'shield', 'sf')}${tile('Menunggu klien', P.filter(p => p.s === 5).length, 'Presentasi & revisi', null, 'user', 'cl')}${tile('Nilai pipeline', rpk(P.reduce((s, p) => s + PKG.find(x => x.id === p.p).price, 0)), 'Total jasa', null, 'wallet')}</div>
+  <div class="kanban k7">${cols.map(c => `<div class="kcol ${c.s.gold ? 'gold' : ''}"><h3><span>${c.i + 1}. ${c.s.t}</span><span>${c.items.length}</span></h3>${c.items.map(p => `<div class="kcard"><b>${esc(p.c)}</b><div class="chips"><span class="pill ${p.p === 'premium' ? 'cl' : p.p === 'brand' ? 'em' : 'sf'}">${pname(p.p)}</span><span class="note">${esc(p.by)}</span>${p.ref ? '<span class="pill ok">detail</span>' : ''}</div>${c.i < 6 ? `<button class="btn btn-line btn-sm" data-act="pipeNext" data-id="${esc(p.id)}">${c.i === 4 ? 'Buka gerbang syariah' : 'Maju'} ${ic('arrow', 13)}</button>` : '<span class="pill ok">Siap serah terima</span>'}</div>`).join('') || '<span class="note" style="padding:6px">Kosong</span>'}</div>`).join('')}</div>
+  <p class="note" style="margin-top:10px">${mode() === 'live' ? 'Pesanan live dari klien muncul otomatis di papan ini.' : 'Mode demo: papan berisi proyek contoh. Kartu berlabel "detail" bisa dibuka di Gerbang syariah.'}</p>`;
 };
+
+/* ---------- Gerbang syariah (verifikasi tim) ---------- */
+const gateProjects = () => (S.projects || []);
+const gateSel = () => { const ps = gateProjects(); return ps.find(p => p.id === S.team.gate) || ps.find(p => p.project.step >= 3 && p.project.step < 7) || ps[0]; };
+V.tim.gerbang = () => {
+  const b = gateSel(); if (!b) return '<section class="card"><p class="muted">Belum ada proyek.</p></section>';
+  const pr = b.project, ck = pr.checks, ak = ck.akhir, sm = summary(ak), log = pr.log;
+  return `<div class="view-intro"><div><span class="note">Gerbang mutu langkah 5 · keputusan akhir di tangan tim & penasihat syariah</span><h1 style="font-size:26px">${esc(b.brief.name)} <span class="pill em" style="vertical-align:middle">${pname(pr.pkg)}</span></h1></div>
+    <label class="proj-pick" style="min-width:240px"><select data-ch="gatePick" aria-label="Pilih proyek">${gateProjects().map(p => `<option value="${esc(p.id)}" ${p.id === b.id ? 'selected' : ''}>${esc(p.brief.name)} · langkah ${Math.min(p.project.step, 6) + 1}</option>`).join('')}</select></label></div>
+  <div class="gate-grid mb">
+    <section class="card"><div class="card-head"><div><span class="lbl">Langkah 1</span><h2 style="margin-top:4px">Audit awal kemasan lama</h2></div>${summaryHTML(ck.awal)}</div>${ck.awal && ck.awal.photo ? `<img src="${ck.awal.photo}" alt="Foto kemasan lama" style="max-width:200px;border-radius:12px;margin-bottom:12px;border:1px solid var(--line)">` : ''}${ck.awal && ck.awal.pending ? `<div class="inner"><p class="note" style="margin-bottom:10px">Klien sudah mengunggah foto. Jalankan audit awal.</p><button class="btn btn-p" data-act="gateRun" data-stage="awal">${ic('shield', 16)} Jalankan audit awal</button></div>` : reportHTML(ck.awal, { team: true, empty: 'Klien belum mengunggah foto kemasan lama.' })}</section>
+    <section class="card"><div class="card-head"><div><span class="lbl">Langkah 5</span><h2 style="margin-top:4px">Gerbang akhir</h2></div>${ak ? `<span class="pill ${sm.pass ? 'ok' : 'cl'}">${sm.pass ? 'Lolos' : `${sm.perbaikan + sm.verifikasi} butir terbuka`}</span>` : ''}</div>
+      ${ak ? reportHTML(ak, { team: true }) : `<div class="inner"><p class="note" style="margin-bottom:10px">${pr.step < 3 ? 'Desain belum masuk tahap penyempurnaan.' : 'Jalankan pemeriksaan atas desain final: AI screening + aturan dari brief dan log produksi.'}</p>${pr.step >= 3 ? `<button class="btn btn-p" data-act="gateRun" data-stage="akhir">${ic('shield', 16)} Jalankan pemeriksaan</button>` : ''}</div>`}
+      ${ak && sm.pass && pr.step === 4 ? `<button class="btn btn-p" style="margin-top:12px" data-act="gatePass">${ic('check', 16)} Loloskan ke presentasi klien</button>` : ''}
+      ${isLive() && ak ? '<p class="note" style="margin-top:10px">Live: butir visual menunggu keputusan tim sampai screening AI (Gemini) diaktifkan. Butir label halal, lisensi aset, dan etika AI dihitung dari brief dan log produksi.</p>' : ''}
+      ${ak && ak.src === 'contoh' ? '<p class="note" style="margin-top:10px">Mode demo: bagian AI memakai hasil contoh tersimpan. Bagian aturan (label halal, lisensi aset, etika AI) dihitung dari data proyek ini.</p>' : ''}</section></div>
+  <section class="card"><div class="card-head"><div><h2>Log produksi</h2><p class="note">Sumber bukti untuk butir 6 (lisensi aset) dan 7 (etika AI).</p></div></div>
+    <div class="tbl-wrap"><table class="log-tbl"><thead><tr><th>Aset</th><th>Sumber</th><th>Referensi</th><th>Lisensi</th><th>Dicek</th></tr></thead><tbody>${log.assets.length ? log.assets.map(a => `<tr><td>${esc(a.name)}</td><td>${esc(a.source_type)}</td><td class="note">${esc(a.source_ref || '—')}</td><td>${a.license ? esc(a.license) : '<span class="pill cl">Tidak ada</span>'}</td><td>${a.verified ? '<span class="pill ok">Ya</span>' : '<span class="pill sf">Belum</span>'}</td></tr>`).join('') : '<tr><td colspan="5" class="note">Belum ada aset tercatat.</td></tr>'}</tbody></table></div>
+    <div class="tbl-wrap" style="margin-top:12px"><table class="log-tbl"><thead><tr><th>Alat AI</th><th>Dipakai untuk</th><th>Diinformasikan ke klien</th></tr></thead><tbody>${log.ai.length ? log.ai.map(a => `<tr><td>${esc(a.tool)}</td><td>${esc(a.usage)}</td><td>${a.disclosed ? '<span class="pill ok">Ya</span>' : '<span class="pill cl">Belum</span>'}</td></tr>`).join('') : '<tr><td colspan="3" class="note">Belum ada penggunaan AI tercatat.</td></tr>'}</tbody></table></div></section>`;
+};
+C.gatePick = el => { S.team.gate = el.value; render(); };
+A.gateRun = el => { const b = gateSel(), st = (el && el.dataset.stage) || 'akhir'; if (isLive()) return liveRunCheck(b, st); b.project.checks.akhir = runCheck(b, 'akhir'); const sm = summary(b.project.checks.akhir); toast(sm.pass ? 'Pemeriksaan selesai: semua butir sesuai' : `Pemeriksaan selesai: ${sm.perbaikan} perbaikan, ${sm.verifikasi} verifikasi`); render(); };
+A.gateDecide = el => { const b = gateSel(), chk = b.project.checks[el.dataset.stage]; if (!chk) return; if (isLive()) return act(m => m.verifyItem(chk.id, +el.dataset.i, el.dataset.v), `Butir ${+el.dataset.i + 1} diputuskan`); decide(chk, +el.dataset.i, el.dataset.v); toast(`Butir ${+el.dataset.i + 1}: ${el.dataset.v === 'sesuai' ? 'diverifikasi sesuai' : 'ditandai perlu perbaikan'}`); render(); };
+A.gatePass = () => { const b = gateSel(); if (!summary(b.project.checks.akhir).pass) return toast('Masih ada butir terbuka', true); if (isLive()) return act(m => m.advance(b.id, 5), b.brief.name + ' lolos gerbang syariah → presentasi klien'); b.project.step = 5; toast(b.brief.name + ' lolos gerbang syariah → presentasi klien'); render(); };
 
 /* ---------- Kapasitas ---------- */
 V.tim.kapasitas = () => {
@@ -63,6 +91,13 @@ V.tim.pasar = () => {
 
 Object.assign(A, {
   scen: el => { S.team.scen = +el.dataset.v; render(); },
-  pipeNext: el => { const p = PIPE.find(x => x.c === el.dataset.c); if (p && p.s < 6) { p.s++; toast(`${p.c} → ${STEPS[p.s].t}`); render(); } },
+  pipeNext: el => {
+    const p = teamOrders().find(x => x.id === el.dataset.id); if (!p) return;
+    if (p.ref) { const b = (S.projects || []).find(x => x.id === p.ref), pr = b.project;
+      if (isLive()) { if (pr.step === 4 && !summary(pr.checks.akhir).pass) { S.team.gate = b.id; S.tab.tim = 'gerbang'; toast('Selesaikan gerbang syariah dulu'); return render(); } return act(m => m.advance(b.id, pr.step + 1), `${b.brief.name} → ${STEPS[pr.step + 1].t}`); }
+      if (pr.step === 4 && !summary(pr.checks.akhir).pass) { S.team.gate = b.id; S.tab.tim = 'gerbang'; toast('Selesaikan gerbang syariah dulu'); return render(); }
+      if (pr.step < 6) { pr.step++; toast(`${b.brief.name} → ${STEPS[pr.step].t}`); } return render(); }
+    if (p.s < 6) { p.s++; toast(`${p.c} → ${STEPS[p.s].t}`); render(); }
+  },
   csvPL: () => { const Y = [0, 1, 2].map(t => pl(t, fac())); const k = [['Omzet', 'omzet'], ['HPP', 'hpp'], ['Laba kotor', 'kotor'], ['Cadangan 3%', 'cad'], ['Biaya tetap', 'fixed'], ['Honor', 'honor'], ['Penyusutan', 'dep'], ['Laba sebelum pajak', 'lsp'], ['PPh 0,5%', 'pph'], ['Laba bersih', 'laba'], ['Bagi hasil', 'bagi'], ['Laba setelah bagi hasil', 'setelah']]; downloadCSV('proyeksi-laba-rugi-maknai.csv', [['Uraian', 'Tahun 1', 'Tahun 2', 'Tahun 3'], ...k.map(([l, x]) => [l, ...Y.map(y => Math.round(y[x]))])]); }
 });

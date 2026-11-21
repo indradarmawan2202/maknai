@@ -125,13 +125,42 @@ export const TEMPLATES = [
 ];
 
 /* ---------- state awal ---------- */
+/* Satu akun bisa punya banyak proyek (S.projects). S.brief / S.project / S.invoices di core.js
+   adalah facade: referensi ke objek milik proyek aktif, jadi kode portal lama tetap jalan. */
+export const demoLog = () => ({
+  ai: [{ tool: 'Gemini', usage: 'Eksplorasi 12 arah konsep logo dan palet', disclosed: true }],
+  assets: [
+    { name: 'Font judul — Amiri', source_type: 'Open source', source_ref: 'Google Fonts', license: 'SIL OFL 1.1', verified: true },
+    { name: 'Font teks — Plus Jakarta Sans', source_type: 'Open source', source_ref: 'Google Fonts', license: 'SIL OFL 1.1', verified: true },
+    { name: 'Ikon tetes air & lengkung', source_type: 'Original', source_ref: 'Digambar desainer Maknai', license: 'Hak klien setelah serah terima', verified: true }
+  ]
+});
+/* Audit awal (langkah 1) atas label lama proyek contoh. sumber 'contoh' = hasil tersimpan, bukan analisis baru. */
+const auditAwal = () => ({ stage: 'awal', at: '12 Nov', src: 'contoh', items: [
+  { status: 'sesuai', temuan: 'Air minum dalam kemasan; tidak ada unsur terlarang.', sumber: 'contoh' },
+  { status: 'perbaikan', temuan: 'Label lama menulis "air penyembuh" — klaim khasiat tanpa bukti.', saran: 'Ganti dengan klaim yang bisa dibuktikan, mis. asal sumber air.', sumber: 'contoh' },
+  { status: 'sesuai', temuan: 'Visual berupa foto pegunungan; sopan.', sumber: 'contoh' },
+  { status: 'sesuai', temuan: 'Bahasa dan slogan santun.', sumber: 'contoh' },
+  { status: 'perbaikan', temuan: 'Logo halal tercetak, sementara brief menyatakan sertifikat halal belum terbit.', saran: 'Lepas logo halal sampai sertifikat terbit.', sumber: 'aturan' },
+  { status: 'verifikasi', temuan: 'Sumber foto pegunungan di label lama tidak diketahui.', saran: 'Ganti dengan aset berlisensi atau buatan sendiri.', sumber: 'aturan' },
+  { status: 'verifikasi', temuan: 'Label lama dibuat di luar Maknai; tidak ada catatan proses.', saran: 'Tidak dipakai lagi di desain baru.', sumber: 'aturan' },
+  { status: 'sesuai', temuan: 'Tidak ada data pribadi tercetak.', sumber: 'contoh' }
+] });
 export const seed = () => ({
   client: { name: 'Fatimah Zahra', biz: 'Air Minum Santri Al-Hikmah', email: 'demo@maknai.id', wa: '081234567890', city: 'Malang', type: 'Pesantren' },
-  brief: { name: 'Al-Hikmah', biz: 'Air minum & minuman', values: ['Amanah', 'Segar'], story: 'Unit usaha santri yang mengolah air pegunungan Batu sejak 2019 untuk warga pondok dan sekitar.', city: 'Batu, Malang', target: 'Warga pondok, wali santri, dan warung sekitar', halal: false, seed: 0, shape: 'lengkung' },
-  project: { pkg: 'brand', step: 3, revisions: 0, notes: [], dp: true, paid: false, approved: false, started: '12 Nov 2026', checks: [] },
+  projects: [
+    { id: 'demo-1',
+      brief: { name: 'Al-Hikmah', biz: 'Air minum & minuman', values: ['Amanah', 'Segar'], story: 'Unit usaha santri yang mengolah air pegunungan Batu sejak 2019 untuk warga pondok dan sekitar.', city: 'Batu, Malang', target: 'Warga pondok, wali santri, dan warung sekitar', halal: false, seed: 0, shape: 'lengkung' },
+      project: { pkg: 'brand', step: 3, revisions: 0, notes: [], dp: true, paid: false, approved: false, started: '12 Nov 2026', checks: { awal: auditAwal(), akhir: null }, log: demoLog() },
+      invoices: [{ id: 'INV-0112', l: 'Uang muka 50% — Paket Brand', a: 450000, s: 'Lunas', d: '12 Nov' }] },
+    { id: 'demo-2',
+      brief: { name: 'Kantin Al-Hikmah', biz: 'Kuliner & camilan', values: ['Hangat', 'Sederhana'], story: 'Kantin santri yang menyajikan camilan rumahan untuk santri dan tamu pondok.', city: 'Batu, Malang', target: 'Santri dan wali santri', halal: true, halalNo: 'ID35110000123450924', seed: 0, shape: 'kotak' },
+      project: { pkg: 'starter', step: 7, revisions: 1, notes: ['Warna oranye dibuat lebih hangat'], dp: true, paid: true, approved: true, started: '2 Okt 2026', doneAt: '7 Okt', checks: { awal: null, akhir: null }, log: demoLog() },
+      invoices: [{ id: 'INV-0087', l: 'Uang muka 50% — Paket Starter', a: 175000, s: 'Lunas', d: '2 Okt' }, { id: 'INV-0093', l: 'Pelunasan 50% — Paket Starter', a: 175000, s: 'Lunas', d: '7 Okt' }] }
+  ],
+  activeId: 'demo-1',
   subs: { konten: false, month: 0, done: {} },
   orders: [],
-  invoices: [{ id: 'INV-0112', l: 'Uang muka 50% — Paket Brand', a: 450000, s: 'Lunas', d: '12 Nov' }],
   refCode: 'ALHIKMAH10',
   notifs: [{ t: 'Konsep "Lengkung mihrab" dipilih. Tim mulai produksi visual.', d: 'Kemarin' }, { t: 'Uang muka Rp450.000 diterima. Akad ijarah aktif.', d: '12 Nov' }],
   unread: 1

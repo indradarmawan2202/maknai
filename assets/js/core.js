@@ -82,7 +82,20 @@ export const S = {
   ...seed()
 };
 export const SEED_KEYS = Object.keys(seed());
-export const reseed = () => Object.assign(S, seed());
+bindActive();
+/* Facade proyek aktif. Data lama (satu proyek, tanpa S.projects) dimigrasikan ke koleksi. */
+export function bindActive() {
+  if (!Array.isArray(S.projects) || !S.projects.length) {
+    if (!S.project) return;
+    S.projects = [{ id: 'p-' + Date.now().toString(36), brief: S.brief, project: S.project, invoices: S.invoices || [] }];
+  }
+  const p = S.projects.find(x => x.id === S.activeId) || S.projects[0];
+  S.activeId = p.id; S.brief = p.brief; S.project = p.project; S.invoices = p.invoices;
+  const pr = p.project; if (!pr.checks || Array.isArray(pr.checks)) pr.checks = { awal: null, akhir: null }; if (!pr.log) pr.log = { ai: [], assets: [] };
+}
+export const activeBundle = () => (S.projects || []).find(x => x.id === S.activeId);
+export function hydrate(data) { const d = JSON.parse(JSON.stringify(data)); S.projects = d.projects || null; S.activeId = d.activeId || null; Object.assign(S, d); bindActive(); }
+export const reseed = () => { Object.assign(S, seed()); bindActive(); };
 export const snapshot = () => { const o = {}; SEED_KEYS.forEach(k => o[k] = S[k]); return JSON.parse(JSON.stringify(o)); };
 
 /* ---------- registri (diisi oleh modul) ---------- */
@@ -94,9 +107,10 @@ export const V = { klien: {}, tim: {} }; // view dashboard
 export const hooks = { render: () => {}, go: () => {} };
 
 /* ---------- persistensi ---------- */
-const LSK = 'maknai.accounts.v1', LSS = 'maknai.session.v1', LST = 'maknai.theme';
+/* v2: format multi-proyek. Akun v1 dibaca sekali lalu dimigrasikan saat masuk (lihat hydrate). */
+const LSK = 'maknai.accounts.v2', LSS = 'maknai.session.v2', LST = 'maknai.theme', LSK1 = 'maknai.accounts.v1';
 export function saveAccounts() { try { localStorage.setItem(LSK, JSON.stringify(S.accounts)); } catch (e) { } }
-export function loadAccounts() { try { const v = JSON.parse(localStorage.getItem(LSK) || '[]'); if (Array.isArray(v)) S.accounts = v; } catch (e) { } }
+export function loadAccounts() { try { const raw = localStorage.getItem(LSK) ?? localStorage.getItem(LSK1) ?? '[]', v = JSON.parse(raw); if (Array.isArray(v)) S.accounts = v; } catch (e) { } }
 /* Autosave: data akun asli tersimpan setiap ada perubahan; sesi demo tersimpan agar bisa dilanjutkan setelah reload. */
 let saveT = 0;
 export function persist() {
@@ -112,8 +126,9 @@ export function persist() {
 export function restoreSession() {
   try {
     const v = JSON.parse(localStorage.getItem(LSS) || 'null'); if (!v || !v.session) return false;
-    if (v.session.demo) { if (v.data) Object.assign(S, v.data); }
-    else { const acc = S.accounts.find(x => x.email === v.session.email); if (!acc || !acc.data) return false; Object.assign(S, JSON.parse(JSON.stringify(acc.data))); }
+    if (v.session.live) { if (v.tab) S.tab = v.tab; return 'live'; }
+    if (v.session.demo) { if (v.data) hydrate(v.data); }
+    else { const acc = S.accounts.find(x => x.email === v.session.email); if (!acc || !acc.data) return false; hydrate(acc.data); }
     S.session = v.session; S.role = v.role || v.session.role; if (v.tab) S.tab = v.tab;
     return true;
   } catch (e) { return false; }

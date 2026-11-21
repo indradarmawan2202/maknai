@@ -2,7 +2,11 @@
 import { S, A, I, F, V, $, esc, rp, num, slot, ic, seg, tile, toast, openModal, closeModal, modalHead, first, SHORT, TODAY, hooks, downloadCSV, ring } from './core.js';
 import { PKG, EXTRA, STEPS, TEMPLATES, REF_DISC } from './data.js';
 import { buildKit, logoSVG, lockupSVG, labelSVG, postsSVG, kitHTML, tagline } from './kit.js';
-import { reportHTML } from './check.js';
+import { reportHTML, summaryHTML, summary, runCheck, decide } from './check.js';
+import { activeBundle, C } from './core.js';
+import { demoLog } from './data.js';
+import { mode } from './store.js';
+import { isLive, act } from './livesync.js';
 
 const render = () => hooks.render();
 const pkg = () => PKG.find(p => p.id === S.project.pkg);
@@ -18,6 +22,7 @@ function nextAction() {
   if (st >= 7) return { t: 'Proyek selesai. Maknai Kit siap diunduh.', b: `<button class="btn btn-p" data-act="tab" data-t="kit">${ic('download', 16)} Buka Maknai Kit</button>` };
   if (st === 5) return { t: 'Hasil siap ditinjau. Setujui atau minta revisi (sisa ' + (2 - S.project.revisions) + ' kali).', b: `<button class="btn btn-line" data-act="revise">Minta revisi</button><button class="btn btn-p" data-act="approve">${ic('check', 16)} Setujui hasil</button>` };
   if (st === 6) return { t: `Lakukan pelunasan ${rp(total() - Math.round(total() / 2))} untuk menerima Maknai Kit.`, b: `<button class="btn btn-p" data-act="payOff">${ic('wallet', 16)} Bayar pelunasan</button>` };
+  if (isLive()) return { t: `Tim sedang mengerjakan: <b>${STEPS[st].t}</b> (${STEPS[st].who}). Halaman ini diperbarui otomatis.`, b: '<span class="pill em">Live</span>' };
   return { t: `Tim sedang mengerjakan: <b>${STEPS[st].t}</b> (${STEPS[st].who}).`, b: `<button class="btn btn-line" data-act="simNext" title="Prototipe: majukan progres tim">${ic('play', 16)} Simulasikan progres tim</button>` };
 }
 
@@ -27,7 +32,7 @@ V.klien.dash = () => {
   return `<div class="view-intro"><div><span class="note">${SHORT} · ${esc(S.client.type)} · ${esc(S.client.city)}</span><h1>Assalamu'alaikum, ${esc(first(S.client.name))}.</h1></div><button class="btn btn-line" data-act="waOpen" data-text="Assalamu'alaikum tim Maknai, saya ingin bertanya tentang proyek ${esc(S.brief.name)}.">${ic('send', 16)} Hubungi tim</button></div>
   <section class="card mb"><div class="card-head"><div><span class="lbl">Proyek aktif · Paket ${pkg().name}</span><h2 style="margin-top:6px;font-size:22px">${esc(S.brief.name)}</h2></div>${ring(pct, 64)}</div>${stepperHTML(st)}
     <div class="next-act"><p>${n.t}</p><div class="row nowrap" style="gap:8px">${n.b}</div></div></section>
-  <div class="grid g4 mb">${tile('Paket', pkg().name, `${pkg().days} hari kerja`, null, 'brief')}${tile('Revisi terpakai', S.project.revisions + ' / 2', 'Dalam lingkup brief', null, 'spark', 'sf')}${tile('Sudah dibayar', rp(S.invoices.filter(i => i.s === 'Lunas').reduce((s, i) => s + i.a, 0)), 'Akad ijarah', null, 'wallet')}${tile('Syariah Check', st > 4 ? '8 / 8' : '—', st > 4 ? 'Semua butir lolos' : 'Di langkah 5', null, 'shield', 'cl')}</div>
+  <div class="grid g4 mb">${tile('Paket', pkg().name, `${pkg().days} hari kerja`, null, 'brief')}${tile('Revisi terpakai', S.project.revisions + ' / 2', 'Dalam lingkup brief', null, 'spark', 'sf')}${tile('Sudah dibayar', rp(S.invoices.filter(i => i.s === 'Lunas').reduce((s, i) => s + i.a, 0)), 'Akad ijarah', null, 'wallet')}${(() => { const a = S.project.checks.akhir, sm = summary(a); return tile('Syariah Check', a ? sm.sesuai + ' / 8' : '—', a ? (sm.pass ? 'Lolos gerbang akhir' : 'Ada butir terbuka') : 'Gerbang di langkah 5', null, 'shield', 'cl'); })()}</div>
   <div class="grid split-53"><section class="card"><div class="card-head"><h2>Pratinjau identitas</h2><button class="btn btn-line btn-sm" data-act="tab" data-t="kit">Lihat Brand Kit ${ic('arrow', 14)}</button></div><div class="row start" style="gap:18px;align-items:center"><div class="mock-wrap" style="width:160px;background:${k.pal.c[3]}">${labelSVG(k)}</div><div class="stack" style="gap:8px;flex:1;min-width:200px">${lockupSVG(k, 260)}<div class="hs-pal big">${k.pal.c.map(c => `<i style="background:${c}"></i>`).join('')}</div><span class="note">${k.pal.n} · ${k.type.n} · bentuk ${k.shape}${done() ? '' : ' · <b>draf</b>'}</span></div></div></section>
   <section class="card"><h2>Kabar terbaru</h2><div class="stack" style="gap:0">${S.notifs.slice(0, 5).map(x => `<div class="notif">${ic('bell', 15)}<div>${esc(x.t)}<small>${x.d}</small></div></div>`).join('')}</div></section></div>`;
 };
@@ -55,8 +60,18 @@ V.klien.kit = () => {
 };
 
 /* ---------- Syariah Check ---------- */
-V.klien.check = () => `<section class="card"><div class="card-head"><div><h2>Laporan Maknai Syariah Check</h2><p class="note">Karya diserahkan setelah seluruh butir berstatus "Lolos". Butir "Perbaiki" diselesaikan sebelum presentasi.</p></div><span class="pill ${S.project.step > 4 ? 'ok' : ''}">${S.project.step > 4 ? '8 / 8 lolos' : 'Belum diperiksa'}</span></div>${reportHTML(S.project.step > 4)}${S.project.step > 4 ? '<p class="note" style="margin-top:14px">Diperiksa oleh tim Maknai dan ditelaah penasihat syariah. Penjelasan umum, bukan fatwa.</p>' : ''}</section>`;
-
+V.klien.check = () => {
+  const ck = S.project.checks, aw = ck.awal, ak = ck.akhir, sa = summary(ak), live = mode() === 'live';
+  return `<div class="view-intro"><p class="muted" style="max-width:760px">Syariah Check dijalankan dua kali: <b>audit awal</b> atas kemasan lama (langkah 1) dan <b>gerbang akhir</b> atas desain Maknai sebelum diserahkan (langkah 5). AI membantu screening, aturan membaca data sertifikat dan log produksi, lalu tim memutuskan butir yang butuh bukti.</p></div>
+  <div class="gate-grid">
+  <section class="card"><div class="card-head"><div><span class="lbl">Langkah 1</span><h2 style="margin-top:4px">Audit awal kemasan lama</h2></div>${summaryHTML(aw)}</div>
+    ${aw && aw.photo ? `<img src="${aw.photo}" alt="Foto kemasan lama" style="max-width:180px;border-radius:12px;margin-bottom:12px;border:1px solid var(--line)">` : ''}
+    ${aw && aw.pending ? '<div class="inner note">Foto sudah diterima. Menunggu audit awal oleh tim.</div>' : aw ? reportHTML(aw) : `<div class="inner"><p class="note" style="margin-bottom:10px">Unggah foto kemasan atau label yang kamu pakai sekarang (JPG/PNG/WebP, maks. 5 MB).</p><label class="btn btn-p" style="cursor:pointer">${ic('plus', 16)} Unggah foto kemasan<input type="file" accept="image/jpeg,image/png,image/webp" data-ch="awalPhoto" hidden></label></div>`}
+    ${aw && aw.src === 'contoh' ? `<p class="note" style="margin-top:10px">${live ? '' : 'Mode ' + (mode() === 'demo' ? 'demo' : 'offline') + ': hasil di atas adalah <b>contoh tersimpan</b>. Analisis AI atas foto asli aktif di mode Live.'}</p>` : ''}</section>
+  <section class="card"><div class="card-head"><div><span class="lbl">Langkah 5</span><h2 style="margin-top:4px">Gerbang akhir desain Maknai</h2></div>${ak ? `<span class="pill ${sa.pass ? 'ok' : 'cl'}">${sa.pass ? 'Lolos gerbang' : 'Belum lolos'}</span>` : '<span class="pill">Menunggu</span>'}</div>
+    ${reportHTML(ak, { empty: 'Desain diperiksa setelah penyempurnaan oleh desainer (langkah 4).' })}
+    ${ak ? '<p class="note" style="margin-top:12px">Penjelasan umum, bukan fatwa. Keabsahan sertifikat halal mengacu pada BPJPH.</p>' : ''}</section></div>`;
+};
 /* ---------- Konten bulanan ---------- */
 V.klien.konten = () => {
   if (!S.subs.konten) return `<section class="card" style="max-width:760px"><span class="pill sf">Langganan Konten</span><h2 style="font-size:24px;margin:12px 0 8px">Konten rutin tanpa repot.</h2><p class="muted">${rp(EXTRA[0].price)}/bulan untuk ${EXTRA[0].feat.join(', ').toLowerCase()}. Semua melalui Syariah Check.</p><div class="posts" style="margin:18px 0">${postsSVG(kit()).join('')}</div><button class="btn btn-p" data-act="subKonten">${ic('plus', 16)} Mulai berlangganan</button></section>`;
@@ -105,13 +120,17 @@ V.klien.rujukan = () => `<section class="card" style="max-width:760px"><span cla
 function advance() {
   const p = S.project; if (p.step >= 5) return;
   p.step++;
-  const msg = ['', 'Konsep makna disepakati.', 'Eksplorasi AI selesai — 12 konsep, 4 diteruskan ke desainer.', 'Desainer selesai menyempurnakan logo dan kemasan.', 'Maknai Syariah Check: 8/8 butir lolos.', 'Hasil siap dipresentasikan. Silakan tinjau.'][p.step];
+  const L = demoLog();
+  if (p.step === 3 && !p.log.ai.length) p.log.ai = L.ai;
+  if (p.step === 4 && !p.log.assets.length) p.log.assets = L.assets;
+  if (p.step === 5) { const b = activeBundle(), chk = runCheck(b, 'akhir'); chk.items.forEach((x, i) => { if (x.status === 'verifikasi') decide(chk, i, 'sesuai', 'Tim Maknai (simulasi)'); }); p.checks.akhir = chk; }
+  const msg = ['', 'Konsep makna disepakati.', 'Eksplorasi AI selesai — 12 konsep, 4 diteruskan ke desainer. Penggunaan AI dicatat di log produksi.', 'Desainer selesai menyempurnakan logo dan kemasan. Sumber aset dicatat.', 'Desain masuk gerbang Maknai Syariah Check.', 'Gerbang Syariah Check lolos. Hasil siap ditinjau.'][p.step];
   S.notifs.unshift({ t: msg, d: 'Baru saja' }); S.unread++;
   toast(msg); render();
 }
 Object.assign(A, {
   simNext: advance,
-  approve: () => { S.project.step = 6; S.project.approved = true; toast('Hasil disetujui. Lanjut serah terima.'); render(); },
+  approve: () => { if (isLive()) return act(m => m.approve(S.activeId), 'Hasil disetujui. Lanjut pelunasan.'); S.project.step = 6; S.project.approved = true; toast('Hasil disetujui. Lanjut serah terima.'); render(); },
   revise: () => {
     if (S.project.revisions >= 2) return toast('Kuota 2 revisi sudah terpakai. Revisi tambahan bisa dibicarakan dengan tim.', true);
     openModal(`${modalHead('Minta revisi')}<p class="muted" style="margin-bottom:14px">Sisa ${2 - S.project.revisions} revisi dalam lingkup brief. Tulis masukanmu sejelas mungkin.</p><form data-form="revise" novalidate><div class="field"><label for="rv">Catatan revisi</label><textarea id="rv" maxlength="300" placeholder="Contoh: warna hijaunya ingin lebih segar, nama di kemasan diperbesar."></textarea></div><div class="row"><button type="button" class="btn btn-line" data-act="closeModal" data-close="1">Batal</button><button class="btn btn-p" type="submit">Kirim revisi</button></div></form>`);
@@ -120,7 +139,7 @@ Object.assign(A, {
     const left = total() - Math.round(total() / 2);
     openModal(`${modalHead('Pelunasan (simulasi)')}<div class="inner stack" style="gap:8px"><div class="row"><span class="note">Paket ${pkg().name}</span><b class="mono">${rp(total())}</b></div><div class="row"><span class="note">Uang muka</span><span class="mono">−${rp(Math.round(total() / 2))}</span></div><div class="row"><b>Pelunasan</b><b class="mono" style="font-size:20px">${rp(left)}</b></div><div class="row"><span class="note">Rekening</span><span class="mono">BSI 7123 4567 89 a.n. Maknai</span></div></div><p class="note" style="margin:14px 0">Prototipe — tidak ada transaksi nyata.</p><div class="row"><button class="btn btn-line" data-act="closeModal" data-close="1">Nanti</button><button class="btn btn-p" data-act="paidOff">${ic('check', 16)} Saya sudah transfer</button></div>`);
   },
-  paidOff: () => { const left = total() - Math.round(total() / 2); closeModal(); S.project.paid = true; S.project.step = 7; S.project.doneAt = SHORT; S.invoices.push({ id: 'INV-' + String(Date.now()).slice(-4), l: `Pelunasan 50% — Paket ${pkg().name}`, a: left, s: 'Lunas', d: SHORT }); S.notifs.unshift({ t: 'Pelunasan diterima. Maknai Kit diserahkan — alhamdulillah!', d: 'Baru saja' }); toast('Alhamdulillah! Maknai Kit sudah jadi milikmu.'); S.tab.klien = 'kit'; render(); },
+  paidOff: () => { if (isLive()) { closeModal(); S.tab.klien = 'kit'; return act(m => m.payOff(S.activeId), 'Pelunasan tercatat (simulasi). Maknai Kit sudah jadi milikmu.'); } const left = total() - Math.round(total() / 2); closeModal(); S.project.paid = true; S.project.step = 7; S.project.doneAt = SHORT; S.invoices.push({ id: 'INV-' + String(Date.now()).slice(-4), l: `Pelunasan 50% — Paket ${pkg().name}`, a: left, s: 'Lunas', d: SHORT }); S.notifs.unshift({ t: 'Pelunasan diterima. Maknai Kit diserahkan — alhamdulillah!', d: 'Baru saja' }); toast('Alhamdulillah! Maknai Kit sudah jadi milikmu.'); S.tab.klien = 'kit'; render(); },
   printKit: () => { const p = $('#printArea'), d = $('#kitDoc'); if (!p || !d) return; p.innerHTML = d.outerHTML; window.print(); setTimeout(() => p.innerHTML = '', 800); },
   dlLogo: () => { const k = kit(), svg = logoSVG(k, k.shape, 512).replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" '); blobDl(svg, 'image/svg+xml', 'logo-' + slug(k.name) + '.svg'); },
   dlPal: () => { const k = kit(); downloadCSV('palet-' + slug(k.name) + '.csv', [['Peran', 'Hex'], ...['Utama', 'Pendukung', 'Aksen', 'Latar', 'Teks'].map((r, i) => [r, k.pal.c[i]])]); },
@@ -133,7 +152,24 @@ Object.assign(A, {
   buyTpl: el => { const t = TEMPLATES.find(x => x.id === el.dataset.id); S.orders.push({ t: 'template', id: t.id }); S.invoices.push({ id: 'INV-' + String(Date.now()).slice(-4), l: 'Template Digital — ' + t.n, a: EXTRA[2].price, s: 'Lunas', d: SHORT }); toast(t.n + ' dibeli'); render(); },
   tplDl: el => { const t = TEMPLATES.find(x => x.id === el.dataset.id); blobDl(`${t.n}\n\n${t.d}\n\nPrototipe Maknai — tautan berkas Canva akan dikirim lewat email di layanan asli.`, 'text/plain', slug(t.n) + '.txt'); }
 });
-F.revise = () => { const v = ($('#rv').value || '').trim(); if (v.length < 5) return toast('Tulis catatan revisi minimal 5 karakter', true); S.project.revisions++; S.project.notes.push(v); S.brief.seed = (S.brief.seed || 0) + 1; closeModal(); S.notifs.unshift({ t: 'Revisi ' + S.project.revisions + ' dikerjakan dan siap ditinjau ulang.', d: 'Baru saja' }); toast('Revisi dikirim. Tim sudah memperbarui hasil.'); render(); };
+F.revise = () => { const v = ($('#rv').value || '').trim(); if (v.length < 5) return toast('Tulis catatan revisi minimal 5 karakter', true); if (isLive()) { closeModal(); return act(m => m.requestRevision(S.activeId, v), 'Revisi terkirim ke tim.'); } S.project.revisions++; S.project.notes.push(v); S.brief.seed = (S.brief.seed || 0) + 1; closeModal(); S.notifs.unshift({ t: 'Revisi ' + S.project.revisions + ' dikerjakan dan siap ditinjau ulang.', d: 'Baru saja' }); toast('Revisi dikirim. Tim sudah memperbarui hasil.'); render(); };
 F.workshop = () => { const org = $('#w_org').value.trim(), date = $('#w_date').value, n = +$('#w_n').value; if (!org || !date) return toast('Isi lembaga dan tanggal', true); if (n < 5 || n > 25) return toast('Peserta 5–25 orang', true); S.orders.push({ t: 'workshop', org, date, n }); toast('Jadwal workshop diajukan. Tim akan mengonfirmasi via WhatsApp.'); render(); };
 const slug = s => String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 function blobDl(text, type, name) { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500); }
+
+/* Unggah foto kemasan lama untuk audit awal. Demo/offline: foto diperkecil & disimpan lokal, hasilnya contoh tersimpan. */
+C.awalPhoto = el => {
+  const f = el.files && el.files[0]; if (!f) return;
+  if (!/^image\/(jpeg|png|webp)$/.test(f.type)) return toast('Format harus JPG, PNG, atau WebP', true);
+  if (f.size > 5 * 1024 * 1024) return toast('Ukuran foto maksimal 5 MB', true);
+  const img = new Image(), url = URL.createObjectURL(f);
+  if (isLive()) { const id = S.activeId; return act(async m => { const path = await m.uploadLabel(id, f); await m.createCheck(id, 'awal', path); }, 'Foto terkirim. Tim akan menjalankan audit awal.'); }
+  img.onload = () => {
+    const k = Math.min(1, 480 / Math.max(img.width, img.height)), cv = document.createElement('canvas');
+    cv.width = Math.round(img.width * k); cv.height = Math.round(img.height * k); cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height); URL.revokeObjectURL(url);
+    const chk = runCheck(activeBundle(), 'awal'); chk.photo = cv.toDataURL('image/jpeg', .72); S.project.checks.awal = chk;
+    toast('Foto diunggah. Audit awal selesai (hasil contoh).'); render(); hooks.persist();
+  };
+  img.onerror = () => { URL.revokeObjectURL(url); toast('Foto tidak terbaca, coba file lain', true); };
+  img.src = url;
+};

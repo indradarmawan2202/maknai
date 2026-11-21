@@ -1,5 +1,8 @@
 /* Simulasi alur pemesanan (Lampiran D.4): paket → brief → konsep → kontrak ijarah & uang muka → portal klien. Plus masuk akun. */
-import { S, A, I, C, F, $, esc, rp, slot, ic, brand, themeBtn, chipBtn, seg, fld, toast, hashPw, saveAccounts, snapshot, reseed, hooks, first, TODAY, SHORT, openModal, modalHead } from './core.js';
+import { S, A, I, C, F, $, esc, rp, slot, ic, brand, themeBtn, chipBtn, seg, fld, toast, hashPw, saveAccounts, snapshot, reseed, bindActive, hydrate, hooks, first, TODAY, SHORT, openModal, modalHead } from './core.js';
+import { liveConfigured } from './store.js';
+import { CONFIG } from './config.js';
+import { liveSignIn, liveOrder, isLive, isNetErr } from './livesync.js';
 import { PKG, EXTRA, BIZ, VALUES, SHAPES, STEPS, REF_DISC } from './data.js';
 import { buildKit, logoSVG, labelSVG } from './kit.js';
 
@@ -84,19 +87,31 @@ function validate() {
     if (!c.owner.trim()) e.push('Nama penanggung jawab wajib diisi.');
     if (!/^0\d{8,13}$/.test(c.wa.replace(/[\s-]/g, ''))) e.push('Nomor WhatsApp harus diawali 0 dan berisi 9–14 digit.');
     if (!/^\S+@\S+\.\S+$/.test(c.email)) e.push('Format email belum benar.');
-    else if (S.accounts.some(a => a.email === c.email.trim().toLowerCase())) e.push('Email ini sudah punya portal. Silakan masuk, atau pakai email lain.');
+    else if (!liveConfigured() && S.accounts.some(a => a.email === c.email.trim().toLowerCase())) e.push('Email ini sudah punya portal. Silakan masuk, atau pakai email lain.');
   }
-  if (o.step === 3) { if ((c.pw || '').length < 6) e.push('Kata sandi minimal 6 karakter.'); if (!o.agree) e.push('Setujui akad ijarah terlebih dahulu.'); }
+  if (o.step === 3) { if (!isLive() && (c.pw || '').length < 6) e.push('Kata sandi minimal 6 karakter.'); if (!o.agree) e.push('Setujui akad ijarah terlebih dahulu.'); }
   return e;
 }
 async function finish() {
   const o = S.ord, c = calc(), em = o.contact.email.trim().toLowerCase();
+  if (liveConfigured()) {
+    const btn = document.querySelector('form[data-form="ord"] button[type="submit"]'); if (btn) { btn.disabled = true; btn.textContent = 'Memproses…'; }
+    let net = false;
+    try { if (await liveOrder(o, c)) { S.ord = null; S.tab.klien = 'dash'; } }
+    catch (e) { if (isNetErr(e) && !isLive()) net = true; else { const msg = /registered|already/i.test(e.message || '') ? 'Email ini sudah terdaftar. Silakan masuk dulu, lalu pesan dari portal.' : (e.message || 'Gagal menghubungi server'); S.ord.err = [msg]; slot('ordErr', errHTML(S.ord.err)); toast(msg, true); } }
+    if (btn) { btn.disabled = false; btn.textContent = 'Bayar uang muka & mulai'; }
+    if (!net) return;
+    toast('Server Maknai tidak terjangkau — pesanan disimpan offline di perangkat ini', true);
+    if (S.accounts.some(a => a.email === em)) { S.ord.err = ['Email ini sudah punya portal offline di perangkat ini. Silakan masuk.']; return slot('ordErr', errHTML(S.ord.err)); }
+  }
   reseed();
   S.client = { name: o.contact.owner.trim(), biz: o.brief.name.trim(), email: em, wa: o.contact.wa, city: o.brief.city, type: o.contact.type };
-  S.brief = JSON.parse(JSON.stringify(o.brief));
-  S.project = { pkg: o.pkg, step: 2, revisions: 0, notes: [], dp: true, paid: false, approved: false, started: SHORT, total: c.total };
+  const pid = 'p-' + Date.now().toString(36);
+  S.projects = [{ id: pid, brief: JSON.parse(JSON.stringify(o.brief)),
+    project: { pkg: o.pkg, step: 2, revisions: 0, notes: [], dp: true, paid: false, approved: false, started: SHORT, total: c.total, checks: { awal: null, akhir: null }, log: { ai: [], assets: [] } },
+    invoices: [{ id: 'INV-' + String(Date.now()).slice(-4), l: `Uang muka 50% — Paket ${c.p.name}`, a: c.dp, s: 'Lunas', d: SHORT }] }];
+  S.activeId = pid; bindActive();
   S.subs = { konten: o.konten, month: 0, done: {} };
-  S.invoices = [{ id: 'INV-' + String(Date.now()).slice(-4), l: `Uang muka 50% — Paket ${c.p.name}`, a: c.dp, s: 'Lunas', d: SHORT }];
   S.refCode = (o.brief.name.replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 8) || 'MAKNAI') + '10';
   S.notifs = [{ t: 'Konsep "' + o.brief.shape + '" dipilih. Tim mulai produksi visual.', d: 'Baru saja' }, { t: `Uang muka ${rp(c.dp)} diterima. Akad ijarah aktif.`, d: 'Baru saja' }]; S.unread = 2;
   const acc = { email: em, hash: await hashPw(o.contact.pw, em), data: null };
@@ -143,7 +158,7 @@ export function loginHTML() {
   <div class="field"><label for="l_pw">Kata sandi</label><div class="pwrap"><input id="l_pw" type="${a.showPw ? 'text' : 'password'}" autocomplete="current-password" data-in="login" data-k="pw" value="${esc(a.pw)}"><button type="button" class="btn btn-line btn-icon" data-act="showPw" aria-label="Tampilkan kata sandi">${ic('eye', 18)}</button></div></div>
   <button class="btn btn-p btn-lg btn-block" type="submit">Masuk ${ic('arrow', 16)}</button></form>
   <p class="note" style="margin-top:18px;text-align:center">Belum punya proyek? <button class="linkish" data-act="startOrder">Pesan sekarang</button></p>
-  <div class="grid g2" style="margin-top:18px;gap:10px"><button class="btn btn-line" data-act="demoKlien">${ic('eye', 16)} Portal klien (demo)</button><button class="btn btn-line" data-act="demoTim">${ic('chart', 16)} Ruang tim (demo)</button></div></div></div></div>`;
+  ${liveConfigured() && CONFIG.juri && CONFIG.juri.password ? `<button class="btn btn-s btn-block" style="margin-top:18px" data-act="juriLogin">${ic('user', 16)} Masuk sebagai juri</button><p class="note" style="text-align:center;margin-top:6px">Akun klien demo (live). Data ditandai demo dan bisa direset tim.</p>` : ''}<div class="grid g2" style="margin-top:18px;gap:10px"><button class="btn btn-line" data-act="demoKlien">${ic('eye', 16)} Portal klien (demo)</button><button class="btn btn-line" data-act="demoTim">${ic('chart', 16)} Ruang tim (demo)</button></div></div></div></div>`;
 }
 I.login = el => { S.auth[el.dataset.k] = el.value; };
 A.showPw = () => { S.auth.showPw = !S.auth.showPw; hooks.renderLogin(); const i = $('#l_pw'); if (i) i.focus(); };
@@ -151,8 +166,12 @@ F.login = async () => {
   const a = S.auth, em = a.email.trim().toLowerCase(), e = []; let acc;
   if (!/^\S+@\S+\.\S+$/.test(em)) e.push('Format email belum benar.');
   if ((a.pw || '').length < 6) e.push('Kata sandi minimal 6 karakter.');
-  if (!e.length) { acc = S.accounts.find(x => x.email === em); if (!acc) e.push('Belum ada portal dengan email ini di perangkat ini. Pesan dulu atau coba demo.'); else if (acc.hash !== await hashPw(a.pw, em)) e.push('Email atau kata sandi salah.'); }
+  if (!e.length && liveConfigured()) {
+    try { if (await liveSignIn(em, a.pw)) { S.auth = { mode: 'login', email: '', pw: '', err: [] }; return toast('Selamat datang, ' + first(S.live.name)); } }
+    catch (err) { if (!isNetErr(err)) e.push(err.message || 'Gagal masuk'); else a.offline = true; }
+  }
+  if (!e.length) { acc = S.accounts.find(x => x.email === em); if (!acc) e.push(a.offline ? 'Server Maknai tidak terjangkau dan email ini tidak punya portal offline di perangkat ini.' : liveConfigured() ? 'Email atau kata sandi salah.' : 'Belum ada portal dengan email ini di perangkat ini. Pesan dulu atau coba demo.'); else if (acc.hash !== await hashPw(a.pw, em)) e.push('Email atau kata sandi salah.'); }
   a.err = e; slot('authErr', errHTML(e)); if (e.length) return;
-  reseed(); Object.assign(S, JSON.parse(JSON.stringify(acc.data))); S.session = { role: 'klien', demo: false, email: em }; S.auth = { mode: 'login', email: '', pw: '', err: [] };
+  reseed(); hydrate(acc.data); S.session = { role: 'klien', demo: false, email: em }; S.auth = { mode: 'login', email: '', pw: '', err: [] };
   hooks.enterApp('klien'); toast('Selamat datang kembali, ' + first(S.client.name));
 };
