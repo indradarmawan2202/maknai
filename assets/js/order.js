@@ -1,5 +1,5 @@
 /* Simulasi alur pemesanan (Lampiran D.4): paket → brief → konsep → kontrak ijarah & uang muka → portal klien. Plus masuk akun. */
-import { S, A, I, C, F, $, esc, rp, slot, ic, brand, themeBtn, chipBtn, seg, fld, toast, hashPw, saveAccounts, snapshot, reseed, hooks, first, TODAY, SHORT, openModal, modalHead } from './core.js';
+import { S, A, I, C, F, $, esc, rp, slot, ic, brand, themeBtn, chipBtn, seg, fld, toast, hashPw, saveAccounts, snapshot, reseed, bindActive, hydrate, hooks, first, TODAY, SHORT, openModal, modalHead } from './core.js';
 import { PKG, EXTRA, BIZ, VALUES, SHAPES, STEPS, REF_DISC } from './data.js';
 import { buildKit, logoSVG, labelSVG } from './kit.js';
 
@@ -93,10 +93,12 @@ async function finish() {
   const o = S.ord, c = calc(), em = o.contact.email.trim().toLowerCase();
   reseed();
   S.client = { name: o.contact.owner.trim(), biz: o.brief.name.trim(), email: em, wa: o.contact.wa, city: o.brief.city, type: o.contact.type };
-  S.brief = JSON.parse(JSON.stringify(o.brief));
-  S.project = { pkg: o.pkg, step: 2, revisions: 0, notes: [], dp: true, paid: false, approved: false, started: SHORT, total: c.total };
+  const pid = 'p-' + Date.now().toString(36);
+  S.projects = [{ id: pid, brief: JSON.parse(JSON.stringify(o.brief)),
+    project: { pkg: o.pkg, step: 2, revisions: 0, notes: [], dp: true, paid: false, approved: false, started: SHORT, total: c.total, checks: { awal: null, akhir: null }, log: { ai: [], assets: [] } },
+    invoices: [{ id: 'INV-' + String(Date.now()).slice(-4), l: `Uang muka 50% — Paket ${c.p.name}`, a: c.dp, s: 'Lunas', d: SHORT }] }];
+  S.activeId = pid; bindActive();
   S.subs = { konten: o.konten, month: 0, done: {} };
-  S.invoices = [{ id: 'INV-' + String(Date.now()).slice(-4), l: `Uang muka 50% — Paket ${c.p.name}`, a: c.dp, s: 'Lunas', d: SHORT }];
   S.refCode = (o.brief.name.replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 8) || 'MAKNAI') + '10';
   S.notifs = [{ t: 'Konsep "' + o.brief.shape + '" dipilih. Tim mulai produksi visual.', d: 'Baru saja' }, { t: `Uang muka ${rp(c.dp)} diterima. Akad ijarah aktif.`, d: 'Baru saja' }]; S.unread = 2;
   const acc = { email: em, hash: await hashPw(o.contact.pw, em), data: null };
@@ -153,6 +155,6 @@ F.login = async () => {
   if ((a.pw || '').length < 6) e.push('Kata sandi minimal 6 karakter.');
   if (!e.length) { acc = S.accounts.find(x => x.email === em); if (!acc) e.push('Belum ada portal dengan email ini di perangkat ini. Pesan dulu atau coba demo.'); else if (acc.hash !== await hashPw(a.pw, em)) e.push('Email atau kata sandi salah.'); }
   a.err = e; slot('authErr', errHTML(e)); if (e.length) return;
-  reseed(); Object.assign(S, JSON.parse(JSON.stringify(acc.data))); S.session = { role: 'klien', demo: false, email: em }; S.auth = { mode: 'login', email: '', pw: '', err: [] };
+  reseed(); hydrate(acc.data); S.session = { role: 'klien', demo: false, email: em }; S.auth = { mode: 'login', email: '', pw: '', err: [] };
   hooks.enterApp('klien'); toast('Selamat datang kembali, ' + first(S.client.name));
 };

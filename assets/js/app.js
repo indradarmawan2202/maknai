@@ -5,11 +5,12 @@ import { mountLanding, onLandingShow } from './landing.js';
 import { renderOrder, loginHTML, newOrder } from './order.js';
 import { chatWidgetHTML } from './bot.js';
 import './portal.js';
+import { mode, MODE_INFO, projectPicker } from './store.js';
 import './team.js';
 
 const TABS = {
   klien: [['Proyek', [['dash', 'Ringkasan', 'home'], ['proyek', 'Alur proyek', 'kanban'], ['kit', 'Brand Kit', 'layers'], ['check', 'Syariah Check', 'shield']]], ['Layanan', [['konten', 'Konten bulanan', 'play'], ['toko', 'Template & workshop', 'store']]], ['Akun', [['tagihan', 'Tagihan & akad', 'receipt'], ['rujukan', 'Rujukan', 'heart']]]],
-  tim: [['Operasional', [['pipeline', 'Pipeline produksi', 'kanban'], ['kapasitas', 'Kapasitas tim', 'user']]], ['Bisnis', [['keuangan', 'Keuangan & skenario', 'chart'], ['pasar', 'Pasar & SWOT', 'trend']]]]
+  tim: [['Operasional', [['pipeline', 'Pipeline produksi', 'kanban'], ['gerbang', 'Gerbang syariah', 'shield'], ['kapasitas', 'Kapasitas tim', 'user']]], ['Bisnis', [['keuangan', 'Keuangan & skenario', 'chart'], ['pasar', 'Pasar & SWOT', 'trend']]]]
 };
 const flat = r => TABS[r].flatMap(g => g[1]);
 const SCREENS = ['landing', 'login', 'order', 'appscr'];
@@ -43,14 +44,15 @@ function render() {
   if (S.screen !== 'app') return;
   const r = S.role, all = flat(r), t = all.find(x => x[0] === S.tab[r]) || all[0];
   if (!$('#appRoot')) shell();
-  const who = r === 'klien' ? [S.client.biz, `${S.client.type} · Paket ${(PKG.find(p => p.id === S.project.pkg) || {}).name}`] : ['Tim INVICTA', 'Ruang tim · demo juri'];
-  slot('who', `<span class="avatar ${avc(who[0])}">${initials(who[0])}</span><div class="meta"><b>${esc(who[0])}</b><small>${esc(who[1])}</small></div>`);
+  const who = r === 'klien' ? [S.client.name, `${S.client.type} · ${S.projects.length > 1 ? S.projects.length + ' proyek' : 'Paket ' + (PKG.find(p => p.id === S.project.pkg) || {}).name}`] : ['Tim INVICTA', 'Ruang tim · demo juri'];
+  slot('who', `<span class="avatar ${avc(who[0])}">${initials(who[0])}</span><div class="meta"><b>${esc(who[0])}</b><small>${esc(who[1])}</small>${r === 'klien' ? projectPicker() : ''}</div>`);
   const badge = { proyek: r === 'klien' && [5, 6].includes(S.project.step) ? '!' : '' };
   slot('nav', TABS[r].map(([g, items]) => `<div class="grp">${g}</div>` + items.map(x => `<button type="button" class="${x[0] === t[0] ? 'on' : ''}" data-act="tab" data-t="${x[0]}" ${x[0] === t[0] ? 'aria-current="page"' : ''} title="${x[1]}">${ic(x[2], 18)}<span class="txt">${x[1]}</span>${badge[x[0]] ? `<span class="badge">${badge[x[0]]}</span>` : ''}</button>`).join('')).join(''));
   slot('crumb', `<span>${r === 'klien' ? 'Portal klien' : 'Ruang tim'}</span><span>/</span><span>${t[1]}</span>`);
   $('#vtitle').textContent = t[1];
   const av = r === 'klien' ? S.client.name : 'Tim Invicta'; $('#avatar').textContent = initials(av); $('#avatar').className = 'avatar ' + avc(av);
-  slot('demoBar', S.session && S.session.demo ? `<div class="demo-bar">${ic('eye', 15)} <b>${r === 'klien' ? 'Portal klien demo' : 'Ruang tim demo'}</b><span class="dtxt"> — data contoh, tersimpan sementara di perangkat ini.</span> <button class="btn btn-line btn-sm" data-act="${r === 'klien' ? 'demoTim' : 'demoKlien'}">Pindah ke ${r === 'klien' ? 'ruang tim' : 'portal klien'}</button>${r === 'klien' ? '<button class="btn btn-p btn-sm" data-act="startOrder">Pesan sungguhan</button>' : ''}<button class="btn btn-ghost btn-sm" data-act="resetDemo">Reset</button></div>` : '');
+  const md = mode(), mi = MODE_INFO[md];
+  slot('demoBar', S.session && S.session.demo ? `<div class="demo-bar"><span class="mode-tag demo" title="${mi.d}">${mi.l}</span> <b>${r === 'klien' ? 'Portal klien demo' : 'Ruang tim demo'}</b><span class="dtxt"> — data contoh, tersimpan sementara di perangkat ini.</span> <button class="btn btn-line btn-sm" data-act="${r === 'klien' ? 'demoTim' : 'demoKlien'}">Pindah ke ${r === 'klien' ? 'ruang tim' : 'portal klien'}</button>${r === 'klien' ? '<button class="btn btn-p btn-sm" data-act="startOrder">Pesan sungguhan</button>' : ''}<button class="btn btn-ghost btn-sm" data-act="resetDemo">Reset</button></div>` : md ? `<div class="mode-bar"><span class="mode-tag ${md}">${mi.l}</span><span>${mi.d}</span></div>` : '');
   slot('view', V[r][t[0]]());
   const v = $('#view'); v.style.animation = 'none'; v.offsetHeight; v.style.animation = '';
   updateBell(); setHash();
