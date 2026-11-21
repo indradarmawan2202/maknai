@@ -1,125 +1,102 @@
-/* Landing Maknai: hero beranimasi, generator Brand Kit, demo Syariah Check, alur, paket, pesaing. */
-import { S, A, I, C, F, $, $$, esc, rp, num, slot, ic, brand, themeBtn, chipBtn, seg, openModal, modalHead, toast, initials, avc } from './core.js';
-import { PKG, EXTRA, STEPS, PROBLEMS, DIFF, COMPETITORS, TEAM, FAQ, BIZ, VALUES, SHAPES, REF_DISC } from './data.js';
+/* Landing Maknai — tata letak bergaya "frame" (bingkai membulat, hero gradasi + kartu melayang),
+   dengan warna asli Maknai: hijau tua, emas, krem. */
+import { S, A, I, C, F, $, $$, esc, rp, num, slot, ic, LOGO, themeBtn, chipBtn, toast, initials, avc } from './core.js';
+import { PKG, EXTRA, STEPS, COMPETITORS, TEAM, FAQ, BIZ, VALUES, SHAPES, REF_DISC } from './data.js';
 import { buildKit, logoSVG, labelSVG, kitHTML } from './kit.js';
-import { checkSectionHTML, drawCheck } from './check.js';
+import { drawCheck } from './check.js';
 
-const NAV = [['layanan', 'Layanan'], ['coba-kit', 'Coba Brand Kit'], ['syariah-check', 'Syariah Check'], ['alur', 'Alur'], ['paket', 'Paket'], ['tim', 'Tim']];
-const HERO = [
-  { name: 'Al-Hikmah', biz: 'Air minum & minuman', values: ['Segar', 'Amanah'], shape: 'lengkung', who: 'Unit usaha pesantren · Batu' },
-  { name: 'Sambal Bu Rini', biz: 'Kuliner & camilan', values: ['Hangat', 'Tradisional'], shape: 'kotak', who: 'UMKM kuliner · Malang' },
-  { name: 'Nabila Hijab', biz: 'Fesyen muslim', values: ['Elegan', 'Modern'], shape: 'lingkar', who: 'Fesyen muslim · Lowokwaru' },
-  { name: 'Madu Barokah', biz: 'Madu & herbal', values: ['Amanah', 'Hangat'], shape: 'bintang', who: 'Koperasi pondok · Dampit' }
+const NAV = [['cara-kerja', 'Cara kerja'], ['coba-kit', 'Brand Kit'], ['syariah-check', 'Syariah Check'], ['alur', 'Alur'], ['paket', 'Paket'], ['tim', 'Tim']];
+const LAPIS = [
+  { k: 'ai', ic: 'spark', tab: 'Eksplorasi AI', t: 'Eksplorasi AI', d: 'Puluhan arah visual dieksplorasi dalam hitungan jam, jadi biaya dan waktu produksi turun.', m: 'Langkah 3', s: '12 konsep / proyek' },
+  { k: 'kurasi', ic: 'user', tab: 'Kurasi desainer', t: 'Kurasi desainer + Syariah Check', d: 'Desainer menyempurnakan hasil AI, lalu 8 butir kesesuaian syariah dan etika AI diperiksa.', m: 'Langkah 4–5', s: '8 / 8 butir lolos' },
+  { k: 'kit', ic: 'layers', tab: 'Maknai Kit', t: 'Maknai Kit', d: 'Panduan merek dan berkas siap sunting, supaya kamu bisa mengelola merekmu sendiri.', m: 'Langkah 7', s: 'Palet · tipografi · template' }
 ];
-export const pkgCard = (p, act = 'startOrder') => `<div class="price-card ${p.hot ? 'hot' : ''} rv"><span class="lbl">Paket ${p.name}</span><div class="price">${rp(p.price)}</div><p class="note">${p.days} hari kerja</p><ul class="ticks dark">${(p.short || p.feat.slice(0, 3)).map(t => `<li>${ic('check', 16)}${t}</li>`).join('')}</ul><button class="btn ${p.hot ? 'btn-p' : 'btn-line'}" style="margin-top:auto" data-act="${act}" data-pkg="${p.id}">Pilih ${p.name}</button></div>`;
+const SEGMENTS = [['home', 'Unit usaha pesantren'], ['store', 'UMKM kuliner'], ['tag', 'Fesyen muslim'], ['star', 'Madu & herbal'], ['layers', 'Kerajinan santri'], ['user', 'Koperasi pondok'], ['grad', 'Madrasah & TPQ'], ['heart', 'Komunitas UMKM']];
+const badge = (t, icn = 'spark') => `<span class="lx-badge"><i>${ic(icn, 11)}</i>${t}</span>`;
+const glass = () => `<span class="lx-glass g1"></span><span class="lx-glass g2"></span><span class="lx-glass g3"></span><span class="lx-glass g4"></span>`;
 
 export function landingHTML() {
-  const marq = ['Brief & discovery', 'Konsep makna', 'Eksplorasi AI', 'Kurasi desainer', 'Syariah Check', 'Presentasi', 'Maknai Kit', 'Workshop santri'];
-  return `
-  <header class="topbar" id="topbar"><div class="wrap">
-    <a class="brand" href="#beranda" data-act="toTop" aria-label="Maknai beranda">${brand(32)}</a>
-    <nav class="navlinks" aria-label="Navigasi utama">${NAV.map(([h, l]) => `<a href="#${h}" data-act="jump" data-to="${h}">${l}</a>`).join('')}</nav>
-    <div class="nav-cta">${themeBtn()}
-      <span id="navAuth" class="row nowrap" style="gap:8px"><button class="btn btn-line btn-sm" data-act="start">Masuk</button><button class="btn btn-p btn-sm hide-m" data-act="startOrder">Pesan sekarang</button></span>
-      <span id="navApp" hidden><button class="btn btn-p btn-sm" data-act="openDash">${ic('home', 16)} Portal saya</button></span>
-      <button class="btn btn-ghost btn-icon burger" data-act="mnav" aria-label="Buka menu" aria-expanded="false">${ic('menu', 20)}</button></div>
-  </div></header>
-  <nav class="mnav" id="mnav" hidden aria-label="Menu seluler">${NAV.map(([h, l]) => `<a href="#${h}" data-act="jump" data-to="${h}">${l}</a>`).join('')}<div class="row" style="padding-top:12px"><button class="btn btn-line" data-act="start">Masuk</button><button class="btn btn-p" data-act="startOrder">Pesan sekarang</button></div></nav>
+  const hk = buildKit({ name: 'Al-Hikmah', biz: 'Air minum & minuman', values: ['Segar', 'Amanah'], shape: 'lengkung' });
+  return `<div class="lx-page"><div class="lx-frame">
 
-  <main id="main">
-  <section class="hero" id="beranda"><div class="wrap hero-grid">
-    <div>
-      <span class="eyebrow">Studio branding AI · Kurasi syariah</span>
-      <h1>Beri <em>makna</em><br>pada setiap <span class="u">brand.</span></h1>
-      <p class="lead">Logo, kemasan, dan konten untuk pesantren & UMKM halal — cepat dengan AI, dirapikan desainer, diperiksa nilai syariahnya.</p>
-      <div class="hero-cta"><button class="btn btn-p btn-lg" data-act="startOrder">${ic('brief', 18)} Pesan sekarang</button><button class="btn btn-line btn-lg" data-act="jump" data-to="coba-kit">${ic('spark', 18)} Coba buat Brand Kit</button></div>
-      <p class="note" style="margin-top:14px">Lihat dulu: <button class="linkish" data-act="demoKlien">portal klien</button> · <button class="linkish" data-act="demoTim">ruang tim (juri)</button></p>
+  <section class="lx-hero" id="beranda">${glass()}
+    <header class="lx-nav"><a class="lx-logo" href="#beranda" data-act="toTop" aria-label="Maknai beranda">${LOGO(34)}<span>Maknai</span></a>
+      <nav class="lx-links" aria-label="Navigasi utama">${NAV.map(([h, l]) => `<a href="#${h}" data-act="jump" data-to="${h}">${l}</a>`).join('')}</nav>
+      <div class="lx-nav-r">${themeBtn()}<span id="navAuth"><button class="lx-ghost" data-act="start">Masuk</button></span><span id="navApp" hidden><button class="lx-ghost" data-act="openDash">Portal saya</button></span><button class="lx-menu" data-act="mnav" aria-label="Buka menu" aria-expanded="false"><i>${ic('menu', 14)}</i>Menu</button></div></header>
+    <nav class="lx-mnav" id="mnav" hidden aria-label="Menu">${NAV.map(([h, l]) => `<a href="#${h}" data-act="jump" data-to="${h}">${l}</a>`).join('')}<div class="lx-mnav-cta"><button class="lx-btn ghost" data-act="start">Masuk</button><button class="lx-btn gold" data-act="startOrder">Pesan sekarang</button></div></nav>
+
+    <div class="lx-hero-in">
+      <span class="lx-badge on-dark"><i>${ic('shield', 11)}</i>Studio branding AI · kurasi syariah</span>
+      <h1>Bangun brand usahamu yang <br class="d">bermakna, bersama <span class="lx-inlogo">${LOGO(46)}</span> Maknai</h1>
+      <form class="lx-pill-in" data-form="heroStart"><input type="text" id="heroName" maxlength="28" placeholder="Nama usahamu" aria-label="Nama usaha"><button type="submit"><i>${ic('play', 12)}</i>Racik sekarang</button></form>
+      <p class="lx-hero-note">Mulai Rp350.000 · 3–10 hari kerja · <button class="lx-link" data-act="demoKlien">lihat portal klien</button></p>
     </div>
-    <div class="hero-vis"><div class="hero-arch arch"><div class="hd"><span class="dot">${ic('spark', 18)}</span><div><b>Studio Maknai</b><small id="heroWho">sedang meracik identitas</small></div></div><div id="heroStage" class="hero-stage"></div></div>
-      <div class="float-card f1"><span class="fi">${ic('shield', 18)}</span><div><span class="note">Syariah Check</span><b>8 / 8 lolos</b></div></div>
-      <div class="float-card f2"><span class="fi">${ic('calc', 18)}</span><div><span class="note">Sayembara mulai Rp2,5 jt</span><b>Maknai Rp350 rb</b></div></div></div>
-  </div>
-  <div class="wrap"><div class="stats rv">
-    <div><b>Rp350 rb</b><span>harga mulai — sayembara desain mulai Rp2,5 jt</span></div>
-    <div><b>3–10</b><span>hari kerja, sudah termasuk 2× revisi</span></div>
-    <div><b data-count="8">8</b><span>butir Syariah Check di setiap karya</span></div>
-    <div><b>50:50</b><span>bayar di muka & saat serah terima</span></div>
-  </div></div></section>
 
-  <div class="marquee" aria-hidden="true"><div class="track">${[...marq, ...marq].map(m => `<span>${m}</span>`).join('')}</div></div>
-
-  <section class="sec" id="layanan"><div class="wrap">
-    <div class="sec-head rv"><span class="eyebrow">Cara kerja</span><h2>AI untuk cepat. Manusia untuk <em>makna</em>.</h2></div>
-    <div class="bento">
-      <article class="feat dark w2 rv"><span class="num">Lapis 01</span><h3>Eksplorasi AI</h3><p>Puluhan arah visual dalam hitungan jam — biaya dan waktu turun.</p><div class="demo row start" style="gap:8px">${SHAPES.map(s => `<span class="mini-logo">${logoSVG(buildKit({ name: 'Maknai', biz: 'Produk santri', values: ['Amanah'], shape: s }), s, 46)}</span>`).join('')}</div></article>
-      <article class="feat w2 rv"><span class="num">Lapis 02</span><h3>Kurasi desainer + Syariah Check</h3><p>Desainer menyempurnakan, lalu 8 butir syariah & etika AI diperiksa.</p><div class="demo"><div class="mini-escrow"><div class="done">Mutu visual<b>✓</b></div><div class="done" style="background:var(--saffron-soft);color:var(--warn)">Syariah<b>8/8</b></div></div></div></article>
-      <article class="feat w2 em rv"><span class="num">Lapis 03</span><h3>Maknai Kit</h3><p>Panduan merek & berkas siap sunting — kamu bisa kelola sendiri.</p><div class="demo chips"><span class="pill ink">Palet</span><span class="pill">Tipografi</span><span class="pill">Template</span><span class="pill">Gaya bahasa</span></div></article>
+    <div class="lx-float">
+      <div class="lx-fc left"><div class="lx-mini"><span class="lx-dot">${ic('user', 13)}</span><b>+396</b><span class="lx-chip ok sm">Malang Raya</span></div>
+        <div class="lx-fc-b"><div class="row"><div><span class="lx-k">Paket pilihanmu</span><b>Starter</b></div><b class="lx-price">Rp350<small>rb</small></b></div><div class="lx-mini-row"><span>${ic('calc', 12)} 3 hari kerja</span><span>${ic('spark', 12)} 2× revisi</span></div></div></div>
+      <div class="lx-fc mid"><div class="row start" style="gap:10px"><span class="lx-dot gold">${ic('layers', 13)}</span><div><span class="lx-k">Maknai Kit</span><b>Al-Hikmah</b></div></div>
+        <div class="lx-fc-logo" style="background:${hk.pal.c[3]}">${logoSVG(hk, 'lengkung', 76)}<div class="lx-sw">${hk.pal.c.map(c => `<i style="background:${c}"></i>`).join('')}</div></div>
+        <span class="lx-k" style="margin-top:12px;display:block">Syariah Check</span><div class="lx-bar"><i style="width:100%"></i></div><div class="row" style="margin-top:6px"><span class="lx-k">8 / 8 butir lolos</span><span class="lx-chip ok sm">Siap diserahkan</span></div></div>
+      <div class="lx-fc right"><div class="lx-mini"><span class="lx-av ${avc('Fatimah Zahra')}">FZ</span><div><span class="lx-k">Klien</span><b>Fatimah Zahra</b></div></div>
+        <div class="lx-fc-b center"><span class="lx-k">Paket Brand · akad ijarah</span><b class="lx-big">Rp900.000</b><div class="lx-two"><div><span class="lx-k">${ic('check', 11)} Uang muka</span><b>Rp450.000</b></div><div><span class="lx-k">${ic('calc', 11)} Pelunasan</span><b>Rp450.000</b></div></div></div></div>
     </div>
-  </div></section>
+  </section>
 
-  <section class="sec" id="coba-kit"><div class="wrap">
-    <div class="sec-head rv"><span class="eyebrow">Prototipe · Brand Kit</span><h2>Coba racik <em>identitas</em> usahamu.</h2><p class="lead">Isi nama, jenis usaha, dan nilai merek — lihat konsep awalnya.</p></div>
-    <div class="gen rv">
-      <form class="gen-in card" data-form="kitGen" onsubmit="return false">
-        <div class="field"><label for="kName">Nama usaha</label><input id="kName" type="text" maxlength="28" value="${esc(S.land.kit.name)}" data-in="kName" placeholder="Contoh: Al-Hikmah"></div>
-        <div class="field"><span class="lbl2">Jenis usaha</span><div class="chips" id="kBiz"></div></div>
-        <div class="field"><span class="lbl2">Nilai merek <span class="note">pilih 1–3</span></span><div class="chips" id="kVals"></div></div>
-        <div class="grid g2" style="gap:0 12px"><div class="field"><label for="kCity">Kota</label><input id="kCity" type="text" maxlength="24" value="${esc(S.land.kit.city)}" data-in="kCity"></div><div class="field"><label class="lbl2">Sertifikat halal</label><label class="check" style="min-height:44px;align-items:center"><input type="checkbox" data-act="kHalal" ${S.land.kit.halal ? 'checked' : ''}><span>Sudah terbit</span></label></div></div>
-        <div class="field"><label for="kStory">Cerita singkat <span class="note">opsional</span></label><textarea id="kStory" maxlength="200" data-in="kStory" placeholder="Contoh: resep sambal warisan ibu sejak 1998.">${esc(S.land.kit.story)}</textarea></div>
-        <div class="row"><button type="button" class="btn btn-line" data-act="kReroll">${ic('spark', 16)} Eksplorasi ulang</button><button type="button" class="btn btn-p" data-act="kOrder">Pesan dengan brief ini ${ic('arrow', 16)}</button></div>
-      </form>
-      <div class="gen-out"><div class="card"><div class="card-head"><div><h2>Pilih konsep logo</h2><p class="note">Empat arah bentuk dari eksplorasi awal.</p></div><span class="pill sf">${ic('spark', 13)} simulasi AI</span></div><div class="concepts" id="kConcepts"></div></div><div id="kOut"></div></div>
-    </div>
-  </div></section>
+  <section class="lx-trust"><h2>Dirancang untuk <em>396 pesantren</em> & UMKM halal</h2>
+    <div class="lx-marq" aria-hidden="true"><div class="lx-track">${[...SEGMENTS, ...SEGMENTS].map(([i, t]) => `<span class="lx-seg">${ic(i, 16)}${t}</span>`).join('')}</div></div></section>
 
-  <section class="sec" id="syariah-check"><div class="wrap">
-    <div class="sec-head rv"><span class="eyebrow">Prototipe · Maknai Syariah Check</span><h2>Delapan pertanyaan sebelum <em>karya</em> diserahkan.</h2><p class="lead">Periksa label contoh ini sampai 8/8 lolos.</p></div>
-    <div class="rv">${checkSectionHTML()}</div>
-  </div></section>
+  <section class="lx-sec" id="cara-kerja"><div class="lx-head rv">${badge('Maknai · cara kerja', 'spark')}<h2>AI untuk cepat,<br><em>manusia</em> untuk makna</h2></div>
+    <div class="lx-tabs rv" role="tablist" id="lapisTabs"></div>
+    <div class="lx-stackcards rv" id="lapisCards"></div></section>
 
-  <section class="sec" id="alur"><div class="wrap">
-    <div class="sec-head rv"><span class="eyebrow">Alur produksi · paket Brand & Premium</span><h2>Tujuh langkah, <em>tiga</em> gerbang mutu.</h2><p class="lead">AI hanya di langkah 3. Sisanya keputusan manusia.</p></div>
-    <div class="steps7 rv">${STEPS.map((s, i) => `<div class="s7 ${s.gold ? 'gold' : ''}"><span class="s7n">${i + 1}</span><span class="s7d">${s.d}</span><h3>${s.t}</h3>${[1, 3, 4].includes(i) ? `<span class="pill ${s.gold ? 'sf' : 'em'} gate">${ic('shield', 12)} Gerbang mutu</span>` : ''}</div>`).join('')}</div>
-    <div class="cta-band rv"><div><h3>Akad ijarah, tanpa bunga</h3><p class="muted">Bayar 50% di awal, 50% saat serah terima.</p></div><button class="btn btn-ink btn-lg" data-act="startOrder">${ic('brief', 18)} Mulai pesan</button></div>
-  </div></section>
+  <section class="lx-sec lx-lines" id="coba-kit"><div class="lx-head rv">${badge('Prototipe · Brand Kit', 'layers')}<h2>Coba racik <em>identitas</em><br>usahamu sekarang</h2><p>Isi nama, jenis usaha, dan nilai merek. Hasilnya simulasi eksplorasi awal — desainer menyempurnakannya di layanan asli.</p></div>
+    <div class="lx-formwrap rv"><span class="ln l1"></span><span class="ln l2"></span><span class="ln r1"></span><span class="ln r2"></span><span class="bx b1"></span><span class="bx b2"></span><span class="bx b3"></span><span class="bx b4"></span>
+      <form class="lx-form" data-form="kitGen" onsubmit="return false">
+        <div class="lx-form-h"><span class="lx-dot big" id="kHeadLogo"></span><div style="min-width:0;flex:1"><b id="kHeadName">Brand Kit</b><span class="lx-k">Simulasi eksplorasi AI · gratis</span></div><div class="lx-form-p"><b>Rp0</b><span class="lx-k">tanpa akun</span></div></div>
+        <div class="lx-grid2"><label class="lx-field"><span>${ic('store', 13)}</span><input id="kName" type="text" maxlength="28" value="${esc(S.land.kit.name)}" data-in="kName" placeholder="Nama usaha" aria-label="Nama usaha"></label><label class="lx-field"><span>${ic('pin', 13)}</span><input id="kCity" type="text" maxlength="24" value="${esc(S.land.kit.city)}" data-in="kCity" placeholder="Kota" aria-label="Kota"></label></div>
+        <div class="lx-grid2"><label class="lx-field"><span>${ic('tag', 13)}</span><select id="kBizSel" data-ch="kBizSel" aria-label="Jenis usaha">${BIZ.map(b => `<option ${S.land.kit.biz === b ? 'selected' : ''}>${b}</option>`).join('')}</select></label><label class="lx-field check"><input type="checkbox" data-act="kHalal" ${S.land.kit.halal ? 'checked' : ''}><span>Sertifikat halal sudah terbit</span></label></div>
+        <div class="lx-vals"><span class="lx-k">Nilai merek (1–3)</span><div class="chips" id="kVals"></div></div>
+        <div class="lx-form-btns"><button type="button" class="lx-btn grad" data-act="kReroll">${ic('spark', 15)} Eksplorasi ulang</button><button type="button" class="lx-btn dark" data-act="kOrder">Pesan dengan brief ini ${ic('arrow', 15)}</button></div>
+      </form></div>
+    <div class="lx-kitout rv"><div class="lx-concepts" id="kConcepts"></div><div id="kOut"></div></div></section>
 
-  <section class="sec" id="paket"><div class="wrap">
-    <div class="sec-head rv"><span class="eyebrow">Paket & harga</span><h2>Mulai dari <em>Rp350.000</em>.</h2><p class="lead">Semua paket termasuk 2× revisi dan Syariah Check.</p></div>
-    <div class="grid g3" style="align-items:stretch">${PKG.map(p => pkgCard(p)).join('')}</div>
-    <div class="extras-line rv">${EXTRA.map(e => `<div><b>${e.name}</b><span class="mono">${rp(e.price)}<small> ${e.unit}</small></span></div>`).join('')}<div><b>Diskon rujukan</b><span class="mono">${REF_DISC}%</span></div></div>
-  </div></section>
+  <section class="lx-sec lx-lines" id="syariah-check"><div class="lx-head rv">${badge('Prototipe · Maknai Syariah Check', 'shield')}<h2>Karya diserahkan setelah <em>8 / 8</em> lolos</h2><p>Periksa rancangan label di tengah. Butir yang bermasalah bisa langsung diperbaiki.</p></div>
+    <div class="lx-orbit rv"><div class="lx-orb-col" id="chkOrbL"></div>
+      <div class="lx-orb-center"><div class="lx-orb-card"><div class="lx-orb-mock" id="chkMock2"></div><div class="lx-orb-score" id="chkScore"></div><div class="lx-orb-detail" id="chkDetail"></div><div class="lx-orb-act" id="chkAct"></div></div></div>
+      <div class="lx-orb-col r" id="chkOrbR"></div></div></section>
 
-  <section class="sec" id="faq"><div class="wrap faq-grid">
-    <div class="sec-head rv"><span class="eyebrow">Tanya jawab</span><h2>Yang sering <em>ditanyakan</em>.</h2><p class="lead"><button class="linkish" data-act="chatToggle">Tanya asisten Maknai</button></p></div>
-    <div class="faq rv">${[0, 2, 3, 4].map(i => FAQ[i]).map(([q, a], i) => `<details ${i === 0 ? 'open' : ''}><summary>${q}</summary><p>${a}</p></details>`).join('')}</div>
-  </div></section>
+  <section class="lx-sec lx-split" id="alur"><div class="lx-split-l rv">${badge('Maknai · alur produksi', 'kanban')}<h2>Dari brief ke Maknai Kit<br>dalam <em>3–10 hari</em></h2><p>AI hanya dipakai di langkah 3. Sebelum dan sesudahnya, selalu ada keputusan manusia.</p>
+      <ol class="lx-steps">${STEPS.map((s, i) => `<li class="${s.gold ? 'gold' : ''}"><span>${i + 1}</span><b>${s.t}</b><em>${s.d}</em></li>`).join('')}</ol>
+      <div class="lx-pills">${[['shield', 'Akad ijarah'], ['wallet', 'DP 50%'], ['spark', '2× revisi'], ['check', 'Syariah Check']].map(([i, t]) => `<span><i>${ic(i, 12)}</i>${t}</span>`).join('')}</div></div>
+    <div class="lx-split-r rv"><div class="lx-paycard"><div class="row start" style="gap:10px"><span class="lx-dot">${ic('brief', 13)}</span><div><span class="lx-k">Pesanan</span><b>Paket Brand</b></div></div><b class="lx-big" style="margin:14px 0 2px">Rp900.000</b><span class="lx-chip ok sm">Tanpa bunga</span>
+        <span class="lx-k" style="display:block;margin:16px 0 8px">Maknai Kit</span><div class="lx-kitcard"><div class="row"><span class="kc-logo">${LOGO(30)}</span><span class="kc-wave">${ic('spark', 18)}</span></div><b class="kc-no">AL-HIKMAH · 7 HARI KERJA</b><div class="row"><span>Unit usaha pesantren</span><span>2026</span></div></div></div>
+      <div class="lx-okcard"><span class="lx-dot">${ic('check', 13)}</span><b>Uang muka Rp450.000 diterima</b></div></div></section>
 
-  <section class="sec" id="tim"><div class="wrap">
-    <div class="sec-head center rv"><span class="eyebrow">Tim INVICTA</span><h2>Orang-orang di balik <em>Maknai</em>.</h2><p class="lead" style="margin:0 auto">UIN Maulana Malik Ibrahim Malang</p></div>
-    <div class="team">${TEAM.map(m => `<div class="member rv"><div class="arch mono-av ${avc(m.n)}"><span>${initials(m.n)}</span></div><b>${m.n}</b><span>${m.r}</span></div>`).join('')}</div>
-    <p class="note rv" style="text-align:center;margin-top:20px">Penasihat: Fery Dwi Riyanto & penasihat syariah</p>
-  </div></section>
+  <section class="lx-sec" id="paket"><div class="lx-head rv">${badge('Paket & harga', 'tag')}<h2>Mulai dari <em>Rp350.000</em></h2><p>Semua paket termasuk 2× revisi dan Maknai Syariah Check.</p></div>
+    <div class="lx-prices">${PKG.map(p => `<div class="lx-pc ${p.hot ? 'hot' : ''} rv">${p.hot ? '<span class="lx-chip gold sm">Paling dipilih</span>' : ''}<span class="lx-dot ${p.hot ? 'light' : ''}">${ic(p.id === 'starter' ? 'tag' : p.id === 'brand' ? 'layers' : 'star', 14)}</span><h3>${p.name}</h3><b class="lx-big">${rp(p.price)}</b><span class="lx-k">${p.days} hari kerja</span><ul>${(p.short || p.feat.slice(0, 3)).map(t => `<li>${ic('check', 13)}${t}</li>`).join('')}</ul><button class="lx-btn ${p.hot ? 'gold' : 'dark'}" data-act="startOrder" data-pkg="${p.id}">Pilih ${p.name}</button></div>`).join('')}</div>
+    <div class="lx-extras rv">${EXTRA.map(e => `<div><span class="lx-k">${e.name}</span><b>${rp(e.price)}<small> ${e.unit}</small></b></div>`).join('')}<div><span class="lx-k">Diskon rujukan</span><b>${REF_DISC}%</b></div></div></section>
 
-  <div class="wrap"><section class="final rv">
-    <span class="eyebrow" style="color:var(--saffron)">Bismillah, mulai hari ini</span>
-    <h2 style="margin-top:14px">Siap memberi <em>makna</em>?</h2>
-    <p>Isi brief 3 menit, sisanya kami kerjakan.</p>
-    <div class="row" style="justify-content:center"><button class="btn btn-s btn-lg" data-act="startOrder">Pesan sekarang</button><button class="btn btn-line btn-lg" data-act="waOpen" data-text="Assalamu'alaikum Maknai, saya ingin konsultasi branding untuk usaha saya.">${ic('send', 18)} Konsultasi via WhatsApp</button></div>
-  </section></div>
-  </main>
+  <section class="lx-sec lx-two-col" id="faq"><div class="lx-head left rv">${badge('Tanya jawab', 'book')}<h2>Yang sering <em>ditanyakan</em></h2><p><button class="lx-link dark" data-act="chatToggle">Tanya asisten Maknai →</button></p></div>
+    <div class="lx-faq rv">${[0, 2, 3, 4].map(i => FAQ[i]).map(([q, a], i) => `<details ${i === 0 ? 'open' : ''}><summary>${q}</summary><p>${a}</p></details>`).join('')}</div></section>
 
-  <footer class="foot"><div class="wrap">
-    <div class="foot-grid">
-      <div><a class="brand" href="#beranda" data-act="toTop">${brand(30)}</a><p class="muted" style="margin-top:14px;max-width:340px">Jasa branding berbasis AI dengan kurasi syariah untuk pesantren dan UMKM halal. Malang, Jawa Timur.</p></div>
-      <div><h4>Layanan</h4><ul>${[['layanan', 'Tiga lapis layanan'], ['coba-kit', 'Coba Brand Kit'], ['syariah-check', 'Syariah Check'], ['paket', 'Paket & harga']].map(([h, l]) => `<li><a href="#${h}" data-act="jump" data-to="${h}">${l}</a></li>`).join('')}</ul></div>
-      <div><h4>Akun</h4><ul><li><button class="fl" data-act="startOrder">Pesan sekarang</button></li><li><button class="fl" data-act="start">Masuk portal</button></li><li><button class="fl" data-act="demoKlien">Portal klien (demo)</button></li><li><button class="fl" data-act="demoTim">Ruang tim (demo)</button></li></ul></div>
-      <div><h4>Tentang</h4><ul><li><a href="#tim" data-act="jump" data-to="tim">Tim INVICTA</a></li><li><a href="#faq" data-act="jump" data-to="faq">Tanya jawab</a></li></ul></div>
-    </div>
-    <div class="foot-bottom"><span>© 2026 Maknai · Tim INVICTA, UIN Maulana Malik Ibrahim Malang</span><span>Prototipe NBPC 2026 — data contoh, tanpa transaksi nyata.</span></div>
-  </div></footer>`;
+  <section class="lx-sec" id="tim"><div class="lx-head rv">${badge('Tim INVICTA · UIN Malang', 'user')}<h2>Orang-orang di balik <em>Maknai</em></h2></div>
+    <div class="lx-team">${TEAM.map(m => `<div class="lx-member rv"><span class="lx-av xl ${avc(m.n)}">${initials(m.n)}</span><b>${m.n}</b><span class="lx-k">${m.r}</span></div>`).join('')}</div>
+    <p class="lx-foot-note rv">Penasihat: Fery Dwi Riyanto & penasihat syariah</p></section>
+
+  <section class="lx-cta rv">${glass()}<h2>Mulai beri makna<br>dalam 3 menit</h2>
+    <form class="lx-pill-in" data-form="ctaStart"><input type="text" id="ctaName" maxlength="28" placeholder="Nama usahamu" aria-label="Nama usaha"><button type="submit"><i>${ic('play', 12)}</i>Mulai pesan</button></form></section>
+
+  <footer class="lx-footer"><div class="lx-foot-grid">
+    <div><p>Maknai membantu pesantren dan UMKM halal membangun brand yang bermakna: cepat dengan AI, rapi oleh desainer, selaras nilai syariah.</p><a class="lx-logo dark" href="#beranda" data-act="toTop">${LOGO(40)}<span>Maknai</span></a></div>
+    <div><h4>Layanan</h4>${[['cara-kerja', 'Cara kerja'], ['coba-kit', 'Brand Kit'], ['syariah-check', 'Syariah Check'], ['paket', 'Paket']].map(([h, l]) => `<a href="#${h}" data-act="jump" data-to="${h}">${l}</a>`).join('')}</div>
+    <div><h4>Akun</h4><button data-act="startOrder">Pesan sekarang</button><button data-act="start">Masuk portal</button><button data-act="demoKlien">Portal klien (demo)</button><button data-act="demoTim">Ruang tim (demo)</button></div>
+    <div><h4>Hubungi</h4><div class="lx-social"><button data-act="waOpen" data-text="Assalamu'alaikum Maknai, saya ingin konsultasi branding." aria-label="WhatsApp">${ic('send', 16)}</button><button data-act="chatToggle" aria-label="Chat asisten">${ic('bot', 16)}</button></div><span class="lx-k" style="margin-top:10px;display:block">Malang, Jawa Timur</span></div>
+  </div><div class="lx-bottom"><span>Maknai · Tim INVICTA, UIN Maulana Malik Ibrahim Malang</span><span>© 2026 · Prototipe NBPC 2026</span></div></footer>
+  </div></div>`;
 }
 
-/* ---------- peta posisi ---------- */
+/* ---------- peta posisi (dipakai di Ruang Tim) ---------- */
 export function posMap() {
   const W = 520, H = 360, P = 44, X = v => P + (W - 2 * P) * v / 100, Y = v => H - P - (H - 2 * P) * v / 100;
   return `<svg viewBox="0 0 ${W} ${H}" class="chart posmap" role="img" aria-label="Peta posisi Maknai terhadap pesaing"><rect x="${P}" y="${P}" width="${W - 2 * P}" height="${H - 2 * P}" fill="var(--surface-2)" rx="12"/><line x1="${W / 2}" y1="${P}" x2="${W / 2}" y2="${H - P}" class="gl"/><line x1="${P}" y1="${H / 2}" x2="${W - P}" y2="${H / 2}" class="gl"/>
@@ -127,60 +104,53 @@ export function posMap() {
   ${COMPETITORS.map(c => `<g><circle cx="${X(c.x)}" cy="${Y(c.y)}" r="${c.me ? 16 : 10}" fill="${c.me ? 'var(--emerald)' : 'var(--ink-3)'}" opacity="${c.me ? 1 : .55}"/>${c.me ? `<text x="${X(c.x)}" y="${Y(c.y) + 5}" text-anchor="middle" font-family="Fraunces" font-weight="700" font-size="14" fill="var(--saffron)">M</text>` : ''}<text x="${c.x > 70 ? X(c.x) - 14 : X(c.x) + (c.me ? 22 : 14)}" y="${Y(c.y) + 4}" text-anchor="${c.x > 70 ? 'end' : 'start'}" font-size="12.5" font-weight="${c.me ? 700 : 500}" fill="var(--ink)">${c.n}</text></g>`).join('')}</svg>`;
 }
 
+/* ---------- cara kerja: tab + kartu bertumpuk ---------- */
+function drawLapis() {
+  const a = S.land.lapis ?? 1, n = LAPIS.length, order = [(a + n - 1) % n, a, (a + 1) % n];
+  slot('lapisTabs', `<span class="lx-tline"></span>${LAPIS.map((l, i) => `<button role="tab" aria-selected="${i === a}" class="${i === a ? 'on' : ''}" data-act="lapis" data-i="${i}"><i>${ic(l.ic, 11)}</i>${l.tab}</button>`).join('')}<span class="lx-tline"></span>`);
+  slot('lapisCards', order.map((i, pos) => { const l = LAPIS[i]; return `<button class="lx-sc ${pos === 1 ? 'on' : pos === 0 ? 'prev' : 'next'}" data-act="lapis" data-i="${i}" ${pos === 1 ? 'aria-current="true"' : ''}><div class="lx-sc-top"><span class="lx-dot ${pos === 1 ? 'light' : ''}">${ic(l.ic, 15)}</span><h3>${l.t}</h3><p>${l.d}</p></div><div class="lx-sc-foot"><span>${ic('kanban', 12)} <b>${l.m}</b> <small>${l.s}</small></span><span class="lx-more"><i>${ic('arrow', 11)}</i>Detail</span></div></button>`; }).join(''));
+}
+A.lapis = el => { const i = +el.dataset.i; if (S.land.lapis === i) return A.jump({ dataset: { to: i === 2 ? 'coba-kit' : i === 1 ? 'syariah-check' : 'alur' } }); S.land.lapis = i; drawLapis(); };
+
 /* ---------- generator ---------- */
 const kit = () => buildKit(S.land.kit);
 function drawKit(onlyOut) {
   const k = S.land.kit;
-  if (!onlyOut) {
-    slot('kBiz', BIZ.map(b => chipBtn(b, 'kBiz', `data-v="${b}"`, k.biz === b)).join(''));
-    slot('kVals', VALUES.map(v => chipBtn(v, 'kVal', `data-v="${v}"`, k.values.includes(v))).join(''));
-  }
+  if (!onlyOut) slot('kVals', VALUES.map(v => chipBtn(v, 'kVal', `data-v="${v}"`, k.values.includes(v))).join(''));
   const kk = kit();
-  slot('kConcepts', SHAPES.map(s => `<button class="concept ${kk.shape === s ? 'on' : ''}" data-act="kShape" data-v="${s}" aria-pressed="${kk.shape === s}">${logoSVG(kk, s, 92)}<span>${s[0].toUpperCase() + s.slice(1)}</span></button>`).join(''));
+  slot('kHeadLogo', logoSVG(kk, kk.shape, 40)); slot('kHeadName', 'Brand Kit · ' + esc(kk.name));
+  slot('kConcepts', SHAPES.map(s => `<button class="concept ${kk.shape === s ? 'on' : ''}" data-act="kShape" data-v="${s}" aria-pressed="${kk.shape === s}">${logoSVG(kk, s, 80)}<span>${s[0].toUpperCase() + s.slice(1)}</span></button>`).join(''));
   slot('kOut', kitHTML(kk, { draft: true, id: 'landKit', compact: !S.land.kitFull }));
 }
+const setName = v => { v = String(v || '').trim().slice(0, 28); if (v) { S.land.kit.name = v; const i = $('#kName'); if (i) i.value = v; drawKit(true); } return v; };
 I.kName = el => { S.land.kit.name = el.value.trim() || 'Usahaku'; drawKit(true); };
 I.kCity = el => { S.land.kit.city = el.value; drawKit(true); };
-I.kStory = el => { S.land.kit.story = el.value; drawKit(true); };
-A.kBiz = el => { S.land.kit.biz = el.dataset.v; S.land.kit.seed = 0; drawKit(); };
+C.kBizSel = el => { S.land.kit.biz = el.value; S.land.kit.seed = 0; drawKit(true); };
 A.kVal = el => { const v = el.dataset.v, a = S.land.kit.values, i = a.indexOf(v); if (i >= 0) { if (a.length === 1) return toast('Pilih minimal satu nilai', true); a.splice(i, 1); } else { if (a.length >= 3) a.shift(); a.push(v); } drawKit(); };
 A.kShape = el => { S.land.kit.shape = el.dataset.v; drawKit(true); };
 A.kHalal = el => { S.land.kit.halal = el.checked; drawKit(true); };
 A.kFull = () => { S.land.kitFull = true; drawKit(true); };
 A.kReroll = () => { S.land.kit.seed = (S.land.kit.seed || 0) + 1; drawKit(true); toast('Eksplorasi baru: palet & tipografi diganti'); };
-
-/* ---------- hero ---------- */
-let heroI = 0, heroT = 0;
-function drawHero() {
-  const h = HERO[heroI % HERO.length], k = buildKit({ ...h, seed: 0 }), st = $('#heroStage'); if (!st) return;
-  slot('heroWho', esc(h.who));
-  st.classList.remove('in'); void st.offsetWidth;
-  st.innerHTML = `<div class="hs-top"><div class="hs-logo" style="background:${k.pal.c[3]}">${logoSVG(k, k.shape, 70)}</div><div style="min-width:0"><b style="font-family:'${k.type.h}',serif;font-size:22px">${esc(k.name)}</b><div class="hs-pal">${k.pal.c.map(c => `<i style="background:${c}"></i>`).join('')}</div><small>${k.pal.n} · ${k.type.n}</small></div></div>
-  <div class="hs-mock">${labelSVG(k)}</div>
-  <div class="hs-steps"><span class="on">${ic('spark', 13)} AI</span><span class="on">${ic('user', 13)} Desainer</span><span class="on gold">${ic('shield', 13)} Syariah 8/8</span><span>${ic('layers', 13)} Kit</span></div>`;
-  st.classList.add('in');
-}
-function playHero() { clearInterval(heroT); drawHero(); if (!matchMedia('(prefers-reduced-motion: reduce)').matches) heroT = setInterval(() => { if (S.screen === 'landing' && !document.hidden) { heroI++; drawHero(); } }, 4200); }
+F.heroStart = f => { const v = setName(f.querySelector('input').value); A.jump({ dataset: { to: 'coba-kit' } }); if (v) toast('Brand Kit untuk ' + v + ' siap dicoba'); };
+F.ctaStart = f => { const v = setName(f.querySelector('input').value); if (v) A.kOrder(); else A.startOrder(); };
 
 /* ---------- reveal / scrollspy ---------- */
 let io, spy;
 function observe() {
   if (!('IntersectionObserver' in window) || matchMedia('(prefers-reduced-motion: reduce)').matches) { $$('.rv').forEach(e => e.classList.add('in')); return; }
   io && io.disconnect();
-  io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); e.target.querySelectorAll('[data-count]').forEach(countUp); } }), { threshold: .08, rootMargin: '0px 0px -30px 0px' });
-  $$('.rv').forEach((e, i) => { e.style.transitionDelay = (i % 4) * 60 + 'ms'; io.observe(e); });
+  io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { threshold: .06, rootMargin: '0px 0px -30px 0px' });
+  $$('.rv').forEach((e, i) => { e.style.transitionDelay = (i % 3) * 60 + 'ms'; io.observe(e); });
   spy && spy.disconnect();
-  spy = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) $$('.navlinks a').forEach(a => a.classList.toggle('on', a.dataset.to === e.target.id)); }), { rootMargin: '-45% 0px -50% 0px' });
+  spy = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) $$('.lx-links a').forEach(a => a.classList.toggle('on', a.dataset.to === e.target.id)); }), { rootMargin: '-45% 0px -50% 0px' });
   NAV.forEach(([h]) => { const s = document.getElementById(h); if (s) spy.observe(s); });
 }
-function countUp(el) { const to = +el.dataset.count, t0 = performance.now(); const step = t => { const k = Math.min(1, (t - t0) / 900); el.textContent = num(Math.round(to * (1 - Math.pow(1 - k, 3)))); if (k < 1) requestAnimationFrame(step); }; requestAnimationFrame(step); }
 
 export function mountLanding() {
   slot('landing', landingHTML());
-  drawKit(); drawCheck(); observe(); playHero();
-  const tb = $('#topbar'); const onS = () => tb && tb.classList.toggle('scrolled', scrollY > 8); addEventListener('scroll', onS, { passive: true }); onS();
+  drawLapis(); drawKit(); drawCheck(); observe();
 }
-export function onLandingShow() { playHero(); }
+export function onLandingShow() { }
 
 A.jump = el => {
   const id = el.dataset.to, go = () => { const s = document.getElementById(id); if (s) s.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
