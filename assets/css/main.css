@@ -1252,3 +1252,76 @@ footer.foot { margin-top: 80px; border-top: 1px solid var(--line); padding: 48px
 }
 .lx-fc .row.start b { display: block; }
 .lx-foot-grid a.lx-logo { display: inline-flex; padding: 0; color: var(--ink); font-size: 30px; }
+
+/* =========================================================
+   LANDING v3.1 — lebar penuh + nuansa Islami
+   (pola khatam, lengkung mihrab, kaligrafi مَعْنَى, ornamen bintang 8)
+   ========================================================= */
+:root { --lx-khatam: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='88' height='88' viewBox='0 0 72 72' fill='none' stroke='%23F6E7B8' stroke-opacity='.12' stroke-width='1'%3E%3Cpath d='M36 14l6.4 15.6L58 36l-15.6 6.4L36 58l-6.4-15.6L14 36l15.6-6.4z'/%3E%3Cpath d='M20.4 20.4h31.2v31.2H20.4z' transform='rotate(45 36 36)'/%3E%3Cpath d='M20.4 20.4h31.2v31.2H20.4z'/%3E%3Cpath d='M0 0l14 14M72 0L58 14M0 72l14-14M72 72L58 58'/%3E%3Ccircle cx='36' cy='36' r='4'/%3E%3C/svg%3E"); --lx-orn: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='16' viewBox='0 0 160 16'%3E%3Cpath d='M0 8h62M98 8h62' stroke='%23D9A441' stroke-opacity='.55'/%3E%3Ccircle cx='66' cy='8' r='1.6' fill='%23D9A441'/%3E%3Ccircle cx='94' cy='8' r='1.6' fill='%23D9A441'/%3E%3Cg transform='translate(72 2) scale(.5)'%3E%3Cpath d='M12.00%200.50L15.37%203.87L20.13%203.87L20.13%208.63L23.50%2012.00L20.13%2015.37L20.13%2020.13L15.37%2020.13L12.00%2023.50L8.63%2020.13L3.87%2020.13L3.87%2015.37L0.50%2012.00L3.87%208.63L3.87%203.87L8.63%203.87z' fill='%23D9A441'/%3E%3C/g%3E%3C/svg%3E"); }
+.lx-page { padding: 0; }
+.lx-frame { max-width: none; border-radius: 0; padding: 12px; box-shadow: none; }
+.lx-float, .lx-foot-grid, .lx-bottom { max-width: 1240px; margin-left: auto; margin-right: auto; }
+.lx-float { margin-top: 54px; }
+.lx-nav { max-width: 1400px; margin: 0 auto; }
+
+/* pola khatam di panel hijau */
+.lx-pat { position: absolute; inset: 0; background-image: var(--lx-khatam); background-position: center top; pointer-events: none; -webkit-mask-image: radial-gradient(ellipse 75% 70% at 50% 35%, #000 25%, transparent 80%); mask-image: radial-gradient(ellipse 75% 70% at 50% 35%, #000 25%, transparent 80%); }
+.lx-cta .lx-pat { -webkit-mask-image: radial-gradient(ellipse 70% 90% at 50% 50%, #000 20%, transparent 80%); mask-image: radial-gradient(ellipse 70% 90% at 50% 50%, #000 20%, transparent 80%); }
+
+/* kaca berbentuk lengkung mihrab */
+.lx-glass { border-radius: 999px 999px 26px 26px; }
+.lx-glass::before { content: ""; position: absolute; inset: 12px; border-radius: inherit; box-shadow: inset 0 0 0 1px rgba(246,231,184,.18); }
+.lx-glass::after { content: ""; position: absolute; left: 50%; top: 34px; width: 22px; height: 22px; margin-left: -11px; background: rgba(246,231,184,.28); clip-path: polygon(50% 0, 64% 21%, 85% 15%, 79% 36%, 100% 50%, 79% 64%, 85% 85%, 64% 79%, 50% 100%, 36% 79%, 15% 85%, 21% 64%, 0 50%, 21% 36%, 15% 15%, 36% 21%); }
+.lx-glass.g1 { width: 170px; height: 280px; left: -20px; top: 200px; transform: rotate(-12deg); }
+.lx-glass.g2 { width: 140px; height: 230px; left: 120px; top: 320px; transform: rotate(-4deg); }
+.lx-glass.g3 { width: 190px; height: 300px; right: -20px; top: 170px; transform: rotate(10deg); }
+.lx-glass.g4 { width: 130px; height: 210px; right: 140px; top: 320px; transform: rotate(4deg); }
+
+/* kaligrafi */
+.lx-ar { font-family: 'Amiri', serif; font-size: 34px; line-height: 1; color: var(--lx-gold); margin-bottom: 14px; text-shadow: 0 4px 18px rgba(0,0,0,.25); }
+.lx-ar-wm { position: absolute; left: 50%; top: 52%; transform: translate(-50%, -50%); font-family: 'Amiri', serif; font-size: clamp(180px, 26vw, 380px); line-height: 1; color: rgba(246,231,184,.06); pointer-events: none; white-space: nowrap; z-index: -1; }
+.lx-hero-in { isolation: isolate; }
+.lx-cta { isolation: isolate; }
+.lx-cta .lx-ar-wm { top: 50%; z-index: 0; font-size: clamp(160px, 22vw, 300px); }
+
+/* ornamen bintang 8 */
+.lx-star { display: inline-block; vertical-align: middle; }
+.lx-orn { display: inline-flex; align-items: center; gap: 10px; color: var(--saffron-2); }
+.lx-orn i { width: 54px; height: 1px; background: linear-gradient(90deg, transparent, currentColor); }
+.lx-orn i:last-child { background: linear-gradient(90deg, currentColor, transparent); }
+.lx-cta .lx-orn { position: relative; color: var(--lx-gold); }
+.lx-trust .lx-orn { margin-bottom: 14px; }
+.lx-head h2::after, .lx-split-l h2::after { content: ""; display: block; width: 160px; height: 16px; margin: 16px auto 0; background: var(--lx-orn) center / contain no-repeat; }
+.lx-head.left h2::after, .lx-split-l h2::after { margin-left: 0; }
+.lx-seg-star { display: inline-grid; place-items: center; color: var(--saffron-2); opacity: .8; }
+.lx-badge i { clip-path: none; }
+
+/* pola di kartu hijau */
+.lx-sc.on, .lx-pc.hot, .lx-kitcard { position: relative; overflow: hidden; isolation: isolate; }
+.lx-sc.on::before, .lx-pc.hot::before { content: ""; position: absolute; inset: 0; z-index: -1; background-image: var(--lx-khatam); background-size: 70px; -webkit-mask-image: linear-gradient(200deg, #000, transparent 70%); mask-image: linear-gradient(200deg, #000, transparent 70%); }
+.lx-kitcard .lx-pat { z-index: -1; background-size: 60px; -webkit-mask-image: linear-gradient(120deg, transparent 20%, #000); mask-image: linear-gradient(120deg, transparent 20%, #000); }
+.lx-pc.hot { box-shadow: 0 0 0 6px var(--lx-card), 0 28px 50px -22px rgba(19,90,64,.7); }
+
+/* lengkung mihrab pada mock label & avatar tim */
+.lx-orb-mock { border-radius: 999px 999px 18px 18px; padding-top: 26px; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--saffron) 40%, transparent); }
+.lx-fc-logo { border-radius: 16px; }
+.lx-arch-av { width: 96px; height: 118px; border-radius: 999px 999px 20px 20px; display: grid; place-items: center; position: relative; overflow: hidden; isolation: isolate; background: linear-gradient(170deg, var(--lx-g1), var(--lx-g3)); color: #F6F2E8; font-weight: 800; font-size: 28px; box-shadow: 0 0 0 6px var(--lx-card), 0 0 0 7px color-mix(in srgb, var(--saffron) 45%, transparent), var(--lx-sh); }
+.lx-arch-av::before { content: ""; position: absolute; inset: 0; z-index: -1; background-image: var(--lx-khatam); background-size: 48px; }
+.lx-arch-av.c2 { background: linear-gradient(170deg, #C76A4A, #8E3F27); }
+.lx-arch-av.c3 { background: linear-gradient(170deg, #D9A441, #9A6A12); }
+.lx-arch-av.c4 { background: linear-gradient(170deg, #4D6A98, #24345E); }
+.lx-member b { margin-top: 14px; }
+
+/* bingkai tepi bawah bertekstur di footer */
+.lx-footer { position: relative; }
+.lx-footer::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 26px; background-image: var(--khatam); background-size: 26px; opacity: .9; -webkit-mask-image: linear-gradient(90deg, transparent, #000 20%, #000 80%, transparent); mask-image: linear-gradient(90deg, transparent, #000 20%, #000 80%, transparent); }
+
+@media (max-width: 860px) {
+  .lx-frame { padding: 6px; }
+  .lx-ar { font-size: 28px; margin-bottom: 10px; }
+  .lx-glass.g2, .lx-glass.g4 { display: none; }
+  .lx-glass.g1 { left: -70px; top: 260px; } .lx-glass.g3 { right: -80px; top: 220px; }
+}
+@media (max-width: 560px) {
+  .lx-arch-av { width: 78px; height: 96px; font-size: 22px; }
+}

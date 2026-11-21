@@ -13,10 +13,12 @@ const LAPIS = [
 ];
 const SEGMENTS = [['home', 'Unit usaha pesantren'], ['store', 'UMKM kuliner'], ['tag', 'Fesyen muslim'], ['star', 'Madu & herbal'], ['layers', 'Kerajinan santri'], ['user', 'Koperasi pondok'], ['grad', 'Madrasah & TPQ'], ['heart', 'Komunitas UMKM']];
 const badge = (t, icn = 'spark') => `<span class="lx-badge"><i>${ic(icn, 11)}</i>${t}</span>`;
-const glass = () => `<span class="lx-glass g1"></span><span class="lx-glass g2"></span><span class="lx-glass g3"></span><span class="lx-glass g4"></span>`;
+const glass = () => `<span class="lx-pat" aria-hidden="true"></span><span class="lx-glass g1"></span><span class="lx-glass g2"></span><span class="lx-glass g3"></span><span class="lx-glass g4"></span>`;
+const STAR = (s = 14) => `<svg class="lx-star" width="${s}" height="${s}" viewBox="0 0 24 24" aria-hidden="true"><path d="M12.00 0.50L15.37 3.87L20.13 3.87L20.13 8.63L23.50 12.00L20.13 15.37L20.13 20.13L15.37 20.13L12.00 23.50L8.63 20.13L3.87 20.13L3.87 15.37L0.50 12.00L3.87 8.63L3.87 3.87L8.63 3.87z" fill="currentColor"/></svg>`;
+const orn = () => `<span class="lx-orn" aria-hidden="true"><i></i>${STAR(12)}<i></i></span>`;
 
 export function landingHTML() {
-  const hk = buildKit({ name: 'Al-Hikmah', biz: 'Air minum & minuman', values: ['Segar', 'Amanah'], shape: 'lengkung' });
+  const hk = buildKit({ name: 'Al-Hikmah', biz: 'Produk santri', values: ['Amanah', 'Tradisional'], shape: 'lengkung' });
   return `<div class="lx-page"><div class="lx-frame">
 
   <section class="lx-hero" id="beranda">${glass()}
@@ -25,7 +27,8 @@ export function landingHTML() {
       <div class="lx-nav-r">${themeBtn()}<span id="navAuth"><button class="lx-ghost" data-act="start">Masuk</button></span><span id="navApp" hidden><button class="lx-ghost" data-act="openDash">Portal saya</button></span><button class="lx-menu" data-act="mnav" aria-label="Buka menu" aria-expanded="false"><i>${ic('menu', 14)}</i>Menu</button></div></header>
     <nav class="lx-mnav" id="mnav" hidden aria-label="Menu">${NAV.map(([h, l]) => `<a href="#${h}" data-act="jump" data-to="${h}">${l}</a>`).join('')}<div class="lx-mnav-cta"><button class="lx-btn ghost" data-act="start">Masuk</button><button class="lx-btn gold" data-act="startOrder">Pesan sekarang</button></div></nav>
 
-    <div class="lx-hero-in">
+    <div class="lx-hero-in"><span class="lx-ar-wm" aria-hidden="true" lang="ar">مَعْنَى</span>
+      <span class="lx-ar" lang="ar" title="ma'na: makna">مَعْنَى</span>
       <span class="lx-badge on-dark"><i>${ic('shield', 11)}</i>Studio branding AI · kurasi syariah</span>
       <h1>Bangun brand usahamu yang <br class="d">bermakna, bersama <span class="lx-inlogo">${LOGO(46)}</span> Maknai</h1>
       <form class="lx-pill-in" data-form="heroStart"><input type="text" id="heroName" maxlength="28" placeholder="Nama usahamu" aria-label="Nama usaha"><button type="submit"><i>${ic('play', 12)}</i>Racik sekarang</button></form>
@@ -43,8 +46,8 @@ export function landingHTML() {
     </div>
   </section>
 
-  <section class="lx-trust"><h2>Dirancang untuk <em>396 pesantren</em> & UMKM halal</h2>
-    <div class="lx-marq" aria-hidden="true"><div class="lx-track">${[...SEGMENTS, ...SEGMENTS].map(([i, t]) => `<span class="lx-seg">${ic(i, 16)}${t}</span>`).join('')}</div></div></section>
+  <section class="lx-trust">${orn()}<h2>Dirancang untuk <em>396 pesantren</em> & UMKM halal</h2>
+    <div class="lx-marq" aria-hidden="true"><div class="lx-track">${[...SEGMENTS, ...SEGMENTS].map(([i, t]) => `<span class="lx-seg">${ic(i, 16)}${t}</span><span class="lx-seg-star">${STAR(14)}</span>`).join('')}</div></div></section>
 
   <section class="lx-sec" id="cara-kerja"><div class="lx-head rv">${badge('Maknai · cara kerja', 'spark')}<h2>AI untuk cepat,<br><em>manusia</em> untuk makna</h2></div>
     <div class="lx-tabs rv" role="tablist" id="lapisTabs"></div>
@@ -70,7 +73,7 @@ export function landingHTML() {
       <ol class="lx-steps">${STEPS.map((s, i) => `<li class="${s.gold ? 'gold' : ''}"><span>${i + 1}</span><b>${s.t}</b><em>${s.d}</em></li>`).join('')}</ol>
       <div class="lx-pills">${[['shield', 'Akad ijarah'], ['wallet', 'DP 50%'], ['spark', '2× revisi'], ['check', 'Syariah Check']].map(([i, t]) => `<span><i>${ic(i, 12)}</i>${t}</span>`).join('')}</div></div>
     <div class="lx-split-r rv"><div class="lx-paycard"><div class="row start" style="gap:10px"><span class="lx-dot">${ic('brief', 13)}</span><div><span class="lx-k">Pesanan</span><b>Paket Brand</b></div></div><b class="lx-big" style="margin:14px 0 2px">Rp900.000</b><span class="lx-chip ok sm">Tanpa bunga</span>
-        <span class="lx-k" style="display:block;margin:16px 0 8px">Maknai Kit</span><div class="lx-kitcard"><div class="row"><span class="kc-logo">${LOGO(30)}</span><span class="kc-wave">${ic('spark', 18)}</span></div><b class="kc-no">AL-HIKMAH · 7 HARI KERJA</b><div class="row"><span>Unit usaha pesantren</span><span>2026</span></div></div></div>
+        <span class="lx-k" style="display:block;margin:16px 0 8px">Maknai Kit</span><div class="lx-kitcard"><span class="lx-pat" aria-hidden="true"></span><div class="row"><span class="kc-logo">${LOGO(30)}</span><span class="kc-wave">${ic('spark', 18)}</span></div><b class="kc-no">AL-HIKMAH · 7 HARI KERJA</b><div class="row"><span>Unit usaha pesantren</span><span>2026</span></div></div></div>
       <div class="lx-okcard"><span class="lx-dot">${ic('check', 13)}</span><b>Uang muka Rp450.000 diterima</b></div></div></section>
 
   <section class="lx-sec" id="paket"><div class="lx-head rv">${badge('Paket & harga', 'tag')}<h2>Mulai dari <em>Rp350.000</em></h2><p>Semua paket termasuk 2× revisi dan Maknai Syariah Check.</p></div>
@@ -81,10 +84,10 @@ export function landingHTML() {
     <div class="lx-faq rv">${[0, 2, 3, 4].map(i => FAQ[i]).map(([q, a], i) => `<details ${i === 0 ? 'open' : ''}><summary>${q}</summary><p>${a}</p></details>`).join('')}</div></section>
 
   <section class="lx-sec" id="tim"><div class="lx-head rv">${badge('Tim INVICTA · UIN Malang', 'user')}<h2>Orang-orang di balik <em>Maknai</em></h2></div>
-    <div class="lx-team">${TEAM.map(m => `<div class="lx-member rv"><span class="lx-av xl ${avc(m.n)}">${initials(m.n)}</span><b>${m.n}</b><span class="lx-k">${m.r}</span></div>`).join('')}</div>
+    <div class="lx-team">${TEAM.map(m => `<div class="lx-member rv"><span class="lx-arch-av ${avc(m.n)}"><span>${initials(m.n)}</span></span><b>${m.n}</b><span class="lx-k">${m.r}</span></div>`).join('')}</div>
     <p class="lx-foot-note rv">Penasihat: Fery Dwi Riyanto & penasihat syariah</p></section>
 
-  <section class="lx-cta rv">${glass()}<h2>Mulai beri makna<br>dalam 3 menit</h2>
+  <section class="lx-cta rv">${glass()}<span class="lx-ar-wm" aria-hidden="true" lang="ar">مَعْنَى</span>${orn()}<h2>Mulai beri makna<br>dalam 3 menit</h2>
     <form class="lx-pill-in" data-form="ctaStart"><input type="text" id="ctaName" maxlength="28" placeholder="Nama usahamu" aria-label="Nama usaha"><button type="submit"><i>${ic('play', 12)}</i>Mulai pesan</button></form></section>
 
   <footer class="lx-footer"><div class="lx-foot-grid">
