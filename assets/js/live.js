@@ -22,18 +22,31 @@ export async function me() {
 }
 
 /* ---------- pesanan ---------- */
-const ORDER_SEL = 'id, pkg, step, total, dp_paid, paid, revisions, is_demo, created_at, client_id, profiles(full_name), briefs(*), checks(id, stage, photo_path, created_at, check_items(*))';
+const ORDER_SEL = 'id, pkg, step, total, dp_paid, paid, revisions, is_demo, created_at, updated_at, client_id, profiles(full_name), briefs(*), checks(id, stage, photo_path, created_at, check_items(*)), payments(id, kind, amount, status, created_at), revision_notes:revisions(note, created_at), production_logs(*)';
 export async function listOrders() { const c = await client(); return must(await c.from('orders').select(ORDER_SEL).order('created_at', { ascending: false })); }
 
 /* Baris DB → bundle proyek yang dipakai UI (bentuk sama dengan seed()). */
+const dShort = t => new Date(t).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
 export function toBundle(row) {
-  const b = row.briefs || {}, byStage = st => (row.checks || []).filter(x => x.stage === st).sort((a, z) => z.created_at.localeCompare(a.created_at))[0];
-  const chk = st => { const x = byStage(st); if (!x) return null; return { stage: st, id: x.id, at: new Date(x.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }), src: 'live', photo: x.photo_path, items: Array.from({ length: 8 }, (_, i) => { const it = (x.check_items || []).find(y => y.butir === i); return it ? { status: it.status, temuan: it.temuan, saran: it.saran, sumber: it.sumber, verified: !!it.verified_at } : { status: 'verifikasi', temuan: 'Belum diperiksa.', sumber: 'aturan' }; }) }; };
+  const b = row.briefs || {}, latest = st => (row.checks || []).filter(x => x.stage === st).sort((a, z) => z.created_at.localeCompare(a.created_at))[0];
+  const chk = st => {
+    const x = latest(st); if (!x) return null;
+    const its = x.check_items || [];
+    return { stage: st, id: x.id, at: dShort(x.created_at), src: 'live', photoPath: x.photo_path, pending: !its.length,
+      items: its.length ? Array.from({ length: 8 }, (_, i) => { const it = its.find(y => y.butir === i); return it ? { status: it.status, temuan: it.temuan, saran: it.saran, sumber: it.sumber, verified: !!it.verified_at, by: it.verified_at ? 'Tim Maknai' : '' } : { status: 'verifikasi', temuan: 'Butir belum diperiksa.', sumber: 'aturan' }; }) : [] };
+  };
+  const logs = row.production_logs || [];
+  const pays = (row.payments || []).slice().sort((a, z) => a.created_at.localeCompare(z.created_at));
+  const pkgName = { starter: 'Starter', brand: 'Brand', premium: 'Premium' }[row.pkg];
   return {
     id: row.id, live: true,
-    brief: { name: b.name, biz: b.biz, values: b.brand_values || [], story: b.story || '', city: b.city || '', target: b.target || '', halal: !!b.halal, halalNo: b.halal_cert_no || '', seed: b.seed || 0, shape: b.shape || 'kotak' },
-    project: { pkg: row.pkg, step: row.step, revisions: row.revisions, notes: [], dp: row.dp_paid, paid: row.paid, approved: row.step >= 6, started: new Date(row.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }), total: row.total, checks: { awal: chk('awal'), akhir: chk('akhir') }, log: { ai: [], assets: [] } },
-    invoices: []
+    brief: { name: b.name || '—', biz: b.biz || 'Produk santri', values: b.brand_values && b.brand_values.length ? b.brand_values : ['Amanah'], story: b.story || '', city: b.city || '', target: b.target || '', halal: !!b.halal, halalNo: b.halal_cert_no || '', seed: b.seed || 0, shape: b.shape || 'kotak' },
+    project: { pkg: row.pkg, step: row.step, revisions: row.revisions, notes: (row.revision_notes || []).map(r => r.note), dp: row.dp_paid, paid: row.paid, approved: row.step >= 6, started: dShort(row.created_at), doneAt: row.paid ? dShort(row.updated_at) : '', total: row.total,
+      checks: { awal: chk('awal'), akhir: chk('akhir') },
+      log: { ai: logs.filter(l => l.kind === 'ai').map(l => ({ id: l.id, tool: l.ai_tool || l.name, usage: l.ai_usage || '', disclosed: l.disclosed })),
+        assets: logs.filter(l => l.kind === 'aset').map(l => ({ id: l.id, name: l.name, source_type: l.source_type || '', source_ref: l.source_reference || '', license: l.license_type || '', verified: l.verification_status === 'terverifikasi' })) } },
+    invoices: pays.map(p => ({ id: 'PAY-' + p.id.slice(0, 4).toUpperCase(), l: `${p.kind === 'dp' ? 'Uang muka 50%' : 'Pelunasan 50%'} — Paket ${pkgName}`, a: p.amount, s: p.status === 'simulasi' || p.status === 'lunas' ? 'Lunas' : 'Menunggu', d: dShort(p.created_at) })),
+    clientName: row.profiles && row.profiles.full_name, isDemo: row.is_demo
   };
 }
 /* Pesanan untuk papan Ruang Tim. */
@@ -72,3 +85,18 @@ export async function subscribe(onChange) {
     .subscribe();
   return () => c.removeChannel(ch);
 }
+
+/* ---------- RPC sisi klien (validasi di server) ---------- */
+export async function rpc(fn, args) { const c = await client(); return must(await c.rpc(fn, args)); }
+export const payDP = id => rpc('simulate_payment', { p_order: id, p_kind: 'dp' });
+export const payOff = id => rpc('simulate_payment', { p_order: id, p_kind: 'pelunasan' });
+export const requestRevision = (id, note) => rpc('request_revision', { p_order: id, p_note: note });
+export const approve = id => rpc('approve_result', { p_order: id });
+
+/* ---------- Syariah Check: tulis hasil (tim) ---------- */
+export async function createCheck(orderId, stage, photoPath) { const c = await client(); return must(await c.from('checks').insert({ order_id: orderId, stage, photo_path: photoPath || null }).select('id').single()).id; }
+export async function writeItems(checkId, items) {
+  const c = await client();
+  return must(await c.from('check_items').upsert(items.map((x, i) => ({ check_id: checkId, butir: i, status: x.status, temuan: x.temuan, saran: x.saran || null, sumber: x.sumber })), { onConflict: 'check_id,butir' }));
+}
+export async function addLog(orderId, entry) { const c = await client(); return must(await c.from('production_logs').insert({ order_id: orderId, ...entry })); }

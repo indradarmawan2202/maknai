@@ -107,9 +107,10 @@ export const V = { klien: {}, tim: {} }; // view dashboard
 export const hooks = { render: () => {}, go: () => {} };
 
 /* ---------- persistensi ---------- */
-const LSK = 'maknai.accounts.v1', LSS = 'maknai.session.v1', LST = 'maknai.theme';
+/* v2: format multi-proyek. Akun v1 dibaca sekali lalu dimigrasikan saat masuk (lihat hydrate). */
+const LSK = 'maknai.accounts.v2', LSS = 'maknai.session.v2', LST = 'maknai.theme', LSK1 = 'maknai.accounts.v1';
 export function saveAccounts() { try { localStorage.setItem(LSK, JSON.stringify(S.accounts)); } catch (e) { } }
-export function loadAccounts() { try { const v = JSON.parse(localStorage.getItem(LSK) || '[]'); if (Array.isArray(v)) S.accounts = v; } catch (e) { } }
+export function loadAccounts() { try { const raw = localStorage.getItem(LSK) ?? localStorage.getItem(LSK1) ?? '[]', v = JSON.parse(raw); if (Array.isArray(v)) S.accounts = v; } catch (e) { } }
 /* Autosave: data akun asli tersimpan setiap ada perubahan; sesi demo tersimpan agar bisa dilanjutkan setelah reload. */
 let saveT = 0;
 export function persist() {
@@ -125,6 +126,7 @@ export function persist() {
 export function restoreSession() {
   try {
     const v = JSON.parse(localStorage.getItem(LSS) || 'null'); if (!v || !v.session) return false;
+    if (v.session.live) { if (v.tab) S.tab = v.tab; return 'live'; }
     if (v.session.demo) { if (v.data) hydrate(v.data); }
     else { const acc = S.accounts.find(x => x.email === v.session.email); if (!acc || !acc.data) return false; hydrate(acc.data); }
     S.session = v.session; S.role = v.role || v.session.role; if (v.tab) S.tab = v.tab;

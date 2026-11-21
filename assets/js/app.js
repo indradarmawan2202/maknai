@@ -5,7 +5,9 @@ import { mountLanding, onLandingShow } from './landing.js';
 import { renderOrder, loginHTML, newOrder } from './order.js';
 import { chatWidgetHTML } from './bot.js';
 import './portal.js';
-import { mode, MODE_INFO, projectPicker } from './store.js';
+import { mode, MODE_INFO, projectPicker, liveConfigured } from './store.js';
+import { isLive, enterLive, liveSignOut, liveSignIn } from './livesync.js';
+import { CONFIG } from './config.js';
 import './team.js';
 
 const TABS = {
@@ -53,7 +55,8 @@ function render() {
   const av = r === 'klien' ? S.client.name : 'Tim Invicta'; $('#avatar').textContent = initials(av); $('#avatar').className = 'avatar ' + avc(av);
   const md = mode(), mi = MODE_INFO[md];
   slot('demoBar', S.session && S.session.demo ? `<div class="demo-bar"><span class="mode-tag demo" title="${mi.d}">${mi.l}</span> <b>${r === 'klien' ? 'Portal klien demo' : 'Ruang tim demo'}</b><span class="dtxt"> — data contoh, tersimpan sementara di perangkat ini.</span> <button class="btn btn-line btn-sm" data-act="${r === 'klien' ? 'demoTim' : 'demoKlien'}">Pindah ke ${r === 'klien' ? 'ruang tim' : 'portal klien'}</button>${r === 'klien' ? '<button class="btn btn-p btn-sm" data-act="startOrder">Pesan sungguhan</button>' : ''}<button class="btn btn-ghost btn-sm" data-act="resetDemo">Reset</button></div>` : md ? `<div class="mode-bar"><span class="mode-tag ${md}">${mi.l}</span><span>${mi.d}</span></div>` : '');
-  slot('view', V[r][t[0]]());
+  if (isLive() && r === 'klien' && !(S.projects || []).length) slot('view', `<section class="card" style="max-width:640px"><h2>Belum ada proyek</h2><p class="muted" style="margin:8px 0 16px">Akunmu sudah aktif. Pesan paket untuk memulai proyek pertama.</p><button class="btn btn-p" data-act="startOrder">${ic('brief', 16)} Pesan sekarang</button></section>`);
+  else slot('view', V[r][t[0]]());
   const v = $('#view'); v.style.animation = 'none'; v.offsetHeight; v.style.animation = '';
   updateBell(); setHash();
 }
@@ -112,7 +115,8 @@ Object.assign(A, {
   demoKlien: () => demo('klien'),
   demoTim: () => demo('tim'),
   resetDemo: () => demo(S.role),
-  logout: () => { endSession(); S.role = null; go('landing'); toast('Kamu sudah keluar'); },
+  logout: async () => { const wasLive = isLive(); endSession(); S.role = null; go('landing'); if (wasLive) await liveSignOut(); toast('Kamu sudah keluar'); },
+  juriLogin: async el => { el.disabled = true; el.textContent = 'Menghubungkan…'; try { if (!(await liveSignIn(CONFIG.juri.email, CONFIG.juri.password))) toast('Akun juri belum disiapkan', true); } catch (e) { toast('Server tidak terjangkau: ' + e.message, true); } el.disabled = false; el.textContent = 'Masuk sebagai juri'; },
   tab: el => { if (S.screen !== 'app') return; closeModal(); S.tab[S.role] = el.dataset.t; S.ui.drawer = false; const ar = $('#appRoot'); ar && ar.classList.remove('drawer'); const sc = $('#scrim'); if (sc) sc.hidden = true; render(); scrollTo(0, 0); },
   collapse: () => { S.ui.collapsed = !S.ui.collapsed; $('#appRoot').classList.toggle('collapsed', S.ui.collapsed); },
   drawer: () => { S.ui.drawer = !S.ui.drawer; $('#appRoot').classList.toggle('drawer', S.ui.drawer); $('#scrim').hidden = !S.ui.drawer; },
@@ -152,7 +156,8 @@ setTheme(getTheme());
 loadAccounts();
 mountLanding();
 slot('chatWidget', chatWidgetHTML());
-restoreSession();
-const h0 = location.hash.slice(1);
+const restored = restoreSession();
+if (restored === 'live') { S.session = null; if (liveConfigured()) enterLive().then(() => { const h = location.hash.slice(1); if (/^(portal|tim)-/.test(h)) route(); }).catch(() => { clearSession(); toast('Sesi live berakhir, silakan masuk lagi', true); }); else clearSession(); }
+const h0 = restored === 'live' ? '' : location.hash.slice(1);
 if (h0 && h0 !== 'beranda' && !document.getElementById(h0)) { S.screen = 'landing'; route(); if (S.screen === 'landing') go('landing'); }
 else { go('landing'); if (h0) setTimeout(() => { const s = document.getElementById(h0); s && s.scrollIntoView(); }, 80); }

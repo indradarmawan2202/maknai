@@ -76,6 +76,19 @@ export function runCheck(bundle, stage) {
   const items = merge(vis, rules);
   return { stage, at: TODAY_SHORT, src: 'contoh', items };
 }
+/* Mode live sebelum Edge Function Gemini aktif: butir visual menunggu pemeriksaan manual tim,
+   butir berbasis data dihitung aturan dari brief + log produksi di database. */
+export function runLiveRules(bundle, stage) {
+  const brief = bundle.brief, log = stage === 'akhir' ? bundle.project.log : { ai: [], assets: [] };
+  const manual = {}; VISION.filter(i => i !== 4).forEach(i => manual[i] = { status: 'verifikasi', temuan: 'Screening AI belum dijalankan; periksa ' + (stage === 'awal' ? 'foto kemasan' : 'desain') + ' secara manual.', sumber: 'aturan' });
+  const rules = ruleItems(brief, log, { halalBadge: stage === 'akhir' ? !!brief.halal : false });
+  if (stage === 'awal') {
+    rules[4] = brief.halal ? rules[4] : { status: 'verifikasi', temuan: 'Sertifikat halal belum terbit; periksa apakah kemasan lama memakai logo halal.', sumber: 'aturan' };
+    rules[5] = { status: 'verifikasi', temuan: 'Sumber aset pada kemasan lama tidak diketahui.', saran: 'Desain baru memakai aset yang tercatat di log produksi.', sumber: 'aturan' };
+    rules[6] = { status: 'verifikasi', temuan: 'Kemasan lama dibuat di luar Maknai; tidak ada catatan proses.', sumber: 'aturan' };
+  }
+  return merge(manual, rules);
+}
 /* Gerbang lolos bila tidak ada "perlu perbaikan" dan setiap "perlu verifikasi" sudah diputuskan tim. */
 export const summary = chk => {
   const it = (chk && chk.items) || [], c = s => it.filter(x => x.status === s).length;
